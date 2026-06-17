@@ -9,6 +9,7 @@ import SavedTrips from './components/SavedTrips';
 import HotelRecommendations from './components/HotelRecommendations';
 import WeatherWidget from './components/WeatherWidget';
 import PackingList from './components/PackingList';
+import TravelAssistant from './components/TravelAssistant';
 import { generateTravelItinerary } from './utils/gemini';
 import type { FullTripItinerary } from './types/travel';
 import { useAuthState } from 'react-firebase-hooks/auth';
@@ -251,6 +252,9 @@ function App() {
                   currentTemp={currentTemp}
                   currentCondition={currentCondition}
                 />
+
+                {/* AI Travel Assistant floating trigger & side panel */}
+                <TravelAssistant tripData={tripData} />
               </div>
             )}
           </>
