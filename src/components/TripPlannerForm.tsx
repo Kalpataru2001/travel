@@ -21,7 +21,9 @@ export default function TripPlannerForm({ onSubmit }: FormProps) {
     width: '100%', padding: '14px', borderRadius: '10px', 
     border: '2px solid #e2e8f0', fontSize: '1rem', 
     fontFamily: 'inherit', boxSizing: 'border-box' as const,
-    backgroundColor: '#f8fafc', transition: 'border-color 0.2s'
+    backgroundColor: '#f8fafc', 
+    color: '#0f172a', /* <-- This ensures the text is dark slate */
+    transition: 'border-color 0.2s'
   };
 
   return (

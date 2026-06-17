@@ -2,7 +2,17 @@
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css'; // CRUCIAL: The map will break without this CSS
 import type { FullTripItinerary } from '../types/travel';
+import L from 'leaflet';
 
+const customIcon = new L.Icon({
+  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
 interface TravelMapProps {
   tripData: FullTripItinerary;
 }
@@ -37,7 +47,11 @@ export default function TravelMap({ tripData }: TravelMapProps) {
 
         {/* Drop a pin for every activity in the itinerary */}
         {dayOneActivities.map((activity, index) => (
-          <Marker key={activity.id} position={[activity.coordinates.lat, activity.coordinates.lng]}>
+          <Marker 
+            key={activity.id} 
+            position={[activity.coordinates.lat, activity.coordinates.lng]}
+            icon={customIcon} 
+          >
             <Popup>
               <strong>Step {index + 1}: {activity.timeOfDay}</strong><br />
               {activity.activityName}<br />
