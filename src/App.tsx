@@ -7,6 +7,7 @@ import TripPlannerForm from './components/TripPlannerForm';
 import Navbar from './components/Navbar';
 import SavedTrips from './components/SavedTrips';
 import HotelRecommendations from './components/HotelRecommendations';
+import WeatherWidget from './components/WeatherWidget';
 import { generateTravelItinerary } from './utils/gemini';
 import type { FullTripItinerary } from './types/travel';
 import { useAuthState } from 'react-firebase-hooks/auth';
@@ -178,6 +179,9 @@ function App() {
                     </div>
                   </div>
                 </div>
+
+                {/* Live Weather Widget — below trip header */}
+                <WeatherWidget destination={tripData.metadata.destination} />
 
                 {/* Dashboard Grid */}
                 <div className="dashboard-grid">

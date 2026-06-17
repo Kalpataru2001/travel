@@ -1533,3 +1533,224 @@ input[type="range"] {
     height: 150px;
   }
 }
+
+/* ============================================================
+   WEATHER WIDGET
+   ============================================================ */
+.weather-widget {
+  background: linear-gradient(135deg,
+    rgba(14, 165, 233, 0.12) 0%,
+    rgba(16, 185, 129, 0.08) 100%);
+  border: 1px solid rgba(14, 165, 233, 0.2);
+  border-radius: var(--radius-lg);
+  padding: 20px 24px;
+  margin-top: 24px;
+  animation: fadeIn 0.5s ease;
+  backdrop-filter: blur(8px);
+}
+
+/* Loading */
+.weather-loading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--text-white-muted);
+  font-size: 0.875rem;
+  padding: 16px 24px;
+}
+
+@keyframes weather-pulse {
+  0%, 100% { opacity: 0.4; transform: scale(0.8); }
+  50%       { opacity: 1;   transform: scale(1.2); }
+}
+
+.weather-loading-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--primary);
+  animation: weather-pulse 1.2s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+/* Error */
+.weather-error {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.82rem;
+  padding: 14px 24px;
+}
+
+/* Header row */
+.weather-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.weather-location {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-white-muted);
+}
+
+.weather-location-icon {
+  font-size: 0.9rem;
+}
+
+.weather-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--primary);
+  background: rgba(14, 165, 233, 0.1);
+  border: 1px solid rgba(14, 165, 233, 0.2);
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+}
+
+/* Current weather */
+.weather-current {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+
+.weather-main {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.weather-emoji {
+  font-size: 3rem;
+  line-height: 1;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+}
+
+.weather-temp-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.weather-temp {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: white;
+  line-height: 1;
+  letter-spacing: -1px;
+}
+
+.weather-desc {
+  font-size: 0.82rem;
+  color: var(--text-white-muted);
+  text-transform: capitalize;
+  font-weight: 500;
+}
+
+/* Stats row */
+.weather-stats {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.weather-stat-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  color: var(--text-white-muted);
+  font-weight: 600;
+}
+
+.weather-stat-icon {
+  font-size: 0.9rem;
+}
+
+/* Forecast strip */
+.weather-forecast {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+}
+
+.weather-forecast::-webkit-scrollbar {
+  display: none;
+}
+
+.weather-forecast-day {
+  flex: 1;
+  min-width: 64px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 10px 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: var(--radius-md);
+  transition: var(--transition);
+}
+
+.weather-forecast-day:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(14, 165, 233, 0.2);
+}
+
+.weather-forecast-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-white-muted);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.weather-forecast-emoji {
+  font-size: 1.4rem;
+}
+
+.weather-forecast-temp {
+  font-size: 1rem;
+  font-weight: 800;
+  color: white;
+}
+
+.weather-forecast-range {
+  font-size: 0.68rem;
+  color: var(--text-white-muted);
+  font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .weather-widget {
+    padding: 16px;
+  }
+
+  .weather-temp {
+    font-size: 1.8rem;
+  }
+
+  .weather-emoji {
+    font-size: 2.2rem;
+  }
+
+  .weather-stats {
+    gap: 12px;
+  }
+}
