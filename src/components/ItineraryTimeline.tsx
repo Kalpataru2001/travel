@@ -22,13 +22,9 @@ export default function ItineraryTimeline({ tripData }: TimelineProps) {
 
                     {/* The Connected Trail */}
                     <div style={{ paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            // Update the activity card rendering block inside src/components/ItineraryTimeline.tsx:
                         {day.activities.map((activity, index) => {
-                            // Generate a dynamic, safe image URL using the keyword provided by Gemini
+                            // 1. We only keep the variable we are actually using
                             const safeKeyword = encodeURIComponent(activity.imageKeyword);
-                            const imageUrl = `https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=600&q=80&sig=${index}`;
-                            // Note: For production, you can replace this fallback with an actual free Unsplash API source link:
-                            const dynamicImageUrl = `https://images.unsplash.com/photo-1542856391-010fb87dcfed?auto=format&fit=crop&w=600&q=80&keyword=${safeKeyword}`;
 
                             return (
                                 <div key={activity.id} style={{ position: 'relative', paddingLeft: '30px' }}>
@@ -47,18 +43,18 @@ export default function ItineraryTimeline({ tripData }: TimelineProps) {
                                         borderRadius: '20px',
                                         border: '1px solid #e2e8f0',
                                         boxShadow: '0 10px 25px rgba(0, 0, 0, 0.05)',
-                                        overflow: 'hidden', /* Ensures the image respects the card's rounded corners */
+                                        overflow: 'hidden',
                                         marginBottom: '25px'
                                     }}>
 
                                         {/* Card Image Header */}
                                         <div style={{ width: '100%', height: '200px', overflow: 'hidden', position: 'relative' }}>
                                             <img
-                                                src={`https://images.unsplash.com/photo-1506929562872-bb421503ef21?auto=format&fit=crop&w=600&q=80&q=${safeKeyword}`}
+                                                // 2. We inject the safeKeyword directly here
+                                                src={`https://images.unsplash.com/photo-1506929562872-bb421503ef21?auto=format&fit=crop&w=600&q=80&keyword=${safeKeyword}`}
                                                 alt={activity.activityName}
                                                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                                 onError={(e) => {
-                                                    // Fallback image if the keyword search fails
                                                     (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=600&q=80';
                                                 }}
                                             />
