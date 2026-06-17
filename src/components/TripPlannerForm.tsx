@@ -35,7 +35,7 @@ export default function TripPlannerForm({ onSubmit }: FormProps) {
       
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
         
-        <div style={{ display: 'flex', gap: '20px' }}>
+        <div className="form-row">
           <div style={{ flex: 1 }}>
             <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, color: '#475569' }}>Starting From</label>
             <input type="text" required placeholder="e.g., Bengaluru" value={startingPoint} onChange={(e) => setStartingPoint(e.target.value)} style={inputStyle} />

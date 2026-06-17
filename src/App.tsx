@@ -88,13 +88,14 @@ function App() {
           </header>
 
           {/* Grid Layout */}
-          <main style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px', alignItems: 'start' }}>
+          {/* Replace the inline grid styles with className */}
+          <main className="dashboard-grid">
             <div style={{ width: '100%' }}>
               <ItineraryTimeline tripData={tripData} />
             </div>
             
-            {/* Map Container Enhancement */}
-            <div style={{ width: '100%', position: 'sticky', top: '40px', padding: '10px', backgroundColor: 'white', borderRadius: '24px', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)' }}>
+            {/* Replace the inline sticky styles with className */}
+            <div className="map-container">
               <div style={{ borderRadius: '16px', overflow: 'hidden' }}>
                 <TravelMap tripData={tripData} />
               </div>

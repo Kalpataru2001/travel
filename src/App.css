@@ -48,3 +48,51 @@ body {
   transform: translateY(-2px);
   box-shadow: 0 8px 15px rgba(37, 99, 235, 0.3);
 }
+
+
+/* Add this to the bottom of src/App.css */
+
+.form-row {
+  display: flex;
+  gap: 20px;
+}
+
+/* --- Dashboard Layout Rules --- */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  align-items: start;
+}
+
+.map-container {
+  width: 100%;
+  position: sticky;
+  top: 40px;
+  padding: 10px;
+  background-color: white;
+  border-radius: 24px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+}
+
+/* --- MOBILE RESPONSIVE MEDIA QUERIES --- */
+@media (max-width: 992px) {
+  
+  /* Make the form inputs stack vertically */
+  .form-row {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  /* Make the dashboard stack the Timeline and Map */
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Un-stick the map so it flows naturally on mobile */
+  .map-container {
+    position: relative;
+    top: 0;
+    margin-bottom: 30px;
+  }
+}
