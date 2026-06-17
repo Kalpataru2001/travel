@@ -44,6 +44,14 @@ export interface HotelRecommendation {
   };
 }
 
+export interface PackingItem {
+  id: string;
+  item: string;
+  category: 'Essentials' | 'Clothing' | 'Toiletries' | 'Gear';
+  packed: boolean;
+  isCustom?: boolean;
+}
+
 export interface FullTripItinerary {
   id: string;
   metadata: TripQuery;
@@ -51,4 +59,5 @@ export interface FullTripItinerary {
   localTransportAdvice: string;
   itinerary: DayItinerary[];
   hotels?: HotelRecommendation[];
+  packingList?: PackingItem[];
 }

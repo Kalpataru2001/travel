@@ -8,6 +8,7 @@ import Navbar from './components/Navbar';
 import SavedTrips from './components/SavedTrips';
 import HotelRecommendations from './components/HotelRecommendations';
 import WeatherWidget from './components/WeatherWidget';
+import PackingList from './components/PackingList';
 import { generateTravelItinerary } from './utils/gemini';
 import type { FullTripItinerary } from './types/travel';
 import { useAuthState } from 'react-firebase-hooks/auth';
@@ -20,6 +21,8 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeView, setActiveView] = useState<'planner' | 'saved'>('planner');
+  const [currentTemp, setCurrentTemp] = useState<number | undefined>(undefined);
+  const [currentCondition, setCurrentCondition] = useState<string | undefined>(undefined);
 
   const [user] = useAuthState(auth);
   const [isSaving, setIsSaving] = useState(false);
@@ -29,6 +32,8 @@ function App() {
     setIsLoading(true);
     setError(null);
     setTripData(null);
+    setCurrentTemp(undefined);
+    setCurrentCondition(undefined);
     try {
       const generatedTrip = await generateTravelItinerary(query);
       setTripData(generatedTrip);
@@ -72,12 +77,16 @@ function App() {
 
   const handleLoadSavedTrip = (trip: FullTripItinerary) => {
     setTripData(trip);
+    setCurrentTemp(undefined);
+    setCurrentCondition(undefined);
     setActiveView('planner');
   };
 
   const handleBackToPlanner = () => {
     setTripData(null);
     setError(null);
+    setCurrentTemp(undefined);
+    setCurrentCondition(undefined);
   };
 
   return (
@@ -181,7 +190,13 @@ function App() {
                 </div>
 
                 {/* Live Weather Widget — below trip header */}
-                <WeatherWidget destination={tripData.metadata.destination} />
+                <WeatherWidget
+                  destination={tripData.metadata.destination}
+                  onWeatherLoaded={(temp, cond) => {
+                    setCurrentTemp(temp);
+                    setCurrentCondition(cond);
+                  }}
+                />
 
                 {/* Dashboard Grid */}
                 <div className="dashboard-grid">
@@ -228,6 +243,14 @@ function App() {
                     travelStyle={tripData.metadata.travelStyle}
                   />
                 )}
+
+                {/* Packing Checklist — stacked below hotels */}
+                <PackingList
+                  tripData={tripData}
+                  onUpdateTripData={setTripData}
+                  currentTemp={currentTemp}
+                  currentCondition={currentCondition}
+                />
               </div>
             )}
           </>

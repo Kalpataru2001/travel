@@ -1754,3 +1754,306 @@ input[type="range"] {
     gap: 12px;
   }
 }
+
+/* ============================================================
+   PACKING CHECKLIST
+   ============================================================ */
+.packing-list-section {
+  background: linear-gradient(135deg,
+    rgba(30, 41, 59, 0.45) 0%,
+    rgba(15, 23, 42, 0.6) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  margin-top: 32px;
+  backdrop-filter: blur(12px);
+  animation: fadeIn 0.6s ease;
+  margin-bottom: 24px;
+}
+
+.packing-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.packing-list-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: white;
+  margin: 0 0 4px 0;
+  letter-spacing: -0.5px;
+}
+
+.packing-list-subtitle {
+  font-size: 0.85rem;
+  color: var(--text-white-muted);
+  margin: 0;
+  font-weight: 500;
+}
+
+.packing-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* Progress bar */
+.packing-progress-container {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-md);
+  padding: 14px 18px;
+  margin-bottom: 24px;
+}
+
+.packing-progress-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.packing-progress-stats {
+  color: var(--primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.packing-progress-bar {
+  background: rgba(255, 255, 255, 0.06);
+  height: 6px;
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+}
+
+.packing-progress-bar-fill {
+  background: linear-gradient(90deg, var(--primary) 0%, var(--secondary) 100%);
+  height: 100%;
+  border-radius: var(--radius-pill);
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 10px rgba(14, 165, 233, 0.3);
+}
+
+/* Checklist Grid */
+.packing-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+@media (max-width: 1024px) {
+  .packing-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .packing-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.packing-column {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s, border-color 0.2s;
+}
+
+.packing-column:hover {
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.packing-column-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  margin-bottom: 12px;
+}
+
+.packing-column-icon {
+  font-size: 1.1rem;
+}
+
+.packing-column-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.packing-column-badge {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-pill);
+  padding: 1px 7px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-white-muted);
+  margin-left: auto;
+}
+
+/* Item List */
+.packing-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex-grow: 1;
+  min-height: 120px;
+}
+
+.packing-item-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.01);
+  border: 1px solid rgba(255, 255, 255, 0.02);
+  border-radius: var(--radius-md);
+  transition: all 0.2s ease;
+  gap: 8px;
+}
+
+.packing-item-row:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(14, 165, 233, 0.15);
+}
+
+.packing-checkbox-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  cursor: pointer;
+  flex-grow: 1;
+}
+
+.packing-checkbox-input {
+  appearance: none;
+  width: 15px;
+  height: 15px;
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  outline: none;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.packing-checkbox-input:checked {
+  background: var(--primary);
+  border-color: var(--primary);
+  box-shadow: 0 0 5px rgba(14, 165, 233, 0.5);
+}
+
+.packing-checkbox-input:checked::after {
+  content: '✓';
+  color: white;
+  font-size: 9px;
+  font-weight: 900;
+}
+
+.packing-item-text {
+  font-size: 0.8rem;
+  color: var(--text-white-muted);
+  font-weight: 500;
+  line-height: 1.4;
+  transition: all 0.2s ease;
+}
+
+.item-packed .packing-item-text {
+  text-decoration: line-through;
+  opacity: 0.45;
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.packing-item-delete {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.2);
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0 2px;
+  line-height: 1;
+  opacity: 0;
+}
+
+.packing-item-row:hover .packing-item-delete {
+  opacity: 1;
+}
+
+.packing-item-delete:hover {
+  color: #ef4444;
+  transform: scale(1.1);
+}
+
+.packing-empty-state {
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.25);
+  text-align: center;
+  padding: 32px 0;
+  font-style: italic;
+}
+
+/* Add Item Form */
+.packing-add-form {
+  display: flex;
+  gap: 6px;
+  margin-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  padding-top: 12px;
+}
+
+.packing-add-input {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-md);
+  padding: 6px 10px;
+  font-size: 0.78rem;
+  color: white;
+  flex-grow: 1;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.packing-add-input:focus {
+  border-color: rgba(14, 165, 233, 0.4);
+}
+
+.packing-add-btn {
+  background: rgba(14, 165, 233, 0.15);
+  border: 1px solid rgba(14, 165, 233, 0.3);
+  color: var(--primary);
+  border-radius: var(--radius-md);
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1.1rem;
+  font-weight: bold;
+  transition: all 0.2s;
+}
+
+.packing-add-btn:hover {
+  background: var(--primary);
+  color: white;
+  box-shadow: 0 0 8px rgba(14, 165, 233, 0.4);
+}

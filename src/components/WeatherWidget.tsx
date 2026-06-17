@@ -5,9 +5,10 @@ import type { WeatherData } from '../utils/weather';
 
 interface WeatherWidgetProps {
   destination: string;
+  onWeatherLoaded?: (temp: number, condition: string) => void;
 }
 
-export default function WeatherWidget({ destination }: WeatherWidgetProps) {
+export default function WeatherWidget({ destination, onWeatherLoaded }: WeatherWidgetProps) {
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -23,6 +24,9 @@ export default function WeatherWidget({ destination }: WeatherWidgetProps) {
         if (!cancelled) {
           setWeather(data);
           setLoading(false);
+          if (onWeatherLoaded) {
+            onWeatherLoaded(data.current.temp, data.current.condition);
+          }
         }
       })
       .catch((err) => {
@@ -33,7 +37,7 @@ export default function WeatherWidget({ destination }: WeatherWidgetProps) {
       });
 
     return () => { cancelled = true; };
-  }, [destination]);
+  }, [destination, onWeatherLoaded]);
 
   if (loading) {
     return (
