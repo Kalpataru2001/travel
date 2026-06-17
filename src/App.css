@@ -1245,11 +1245,27 @@ input[type="range"] {
   }
 
   .navbar-center {
-    display: none;
+    display: flex;
+    gap: 2px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 2px;
+  }
+
+  .nav-tab {
+    padding: 6px 12px;
+    font-size: 0.78rem;
+    gap: 4px;
   }
 
   .navbar-brand-text {
     font-size: 1rem;
+  }
+
+  @media (max-width: 480px) {
+    .navbar-brand-text {
+      display: none;
+    }
   }
 
   .form-row {
