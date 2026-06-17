@@ -7,11 +7,11 @@ export interface TripQuery {
 
 export interface Activity {
   id: string;
-  timeOfDay: 'Morning' | 'Afternoon' | 'Evening';
+  timeOfDay: string; // Flexible — AI may return "Late Afternoon", "Evening", etc.
   activityName: string;
   description: string;
-  estimatedDuration: string; // e.g., "2 hours"
-  transitTimeToNextStop?: string; // e.g., "15 mins drive"
+  estimatedDuration: string;
+  transitTimeToNextStop?: string;
   coordinates: {
     lat: number;
     lng: number;
@@ -22,7 +22,8 @@ export interface Activity {
 
 export interface DayItinerary {
   dayNumber: number;
-  theme: string; // e.g., "Exploring Old Town Heritage"
+  theme: string;
+  imageKeyword?: string; // Optional day-level image keyword
   activities: Activity[];
 }
 

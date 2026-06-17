@@ -4,21 +4,30 @@ import './App.css';
 import TravelMap from './components/TravelMap';
 import ItineraryTimeline from './components/ItineraryTimeline';
 import TripPlannerForm from './components/TripPlannerForm';
+import Navbar from './components/Navbar';
+import SavedTrips from './components/SavedTrips';
 import { generateTravelItinerary } from './utils/gemini';
 import type { FullTripItinerary } from './types/travel';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { auth, db, googleProvider } from './utils/firebase';
+import { signInWithPopup } from 'firebase/auth';
 
 function App() {
-  // We now store the FULL fetched trip data, not just the form query
   const [tripData, setTripData] = useState<FullTripItinerary | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [activeView, setActiveView] = useState<'planner' | 'saved'>('planner');
+
+  const [user] = useAuthState(auth);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState('');
 
   const handleFormSubmit = async (query: any) => {
     setIsLoading(true);
     setError(null);
-    
+    setTripData(null);
     try {
-      // Call our new utility function!
       const generatedTrip = await generateTravelItinerary(query);
       setTripData(generatedTrip);
     } catch (err) {
@@ -28,82 +37,174 @@ function App() {
     }
   };
 
+  const handleSaveTrip = async () => {
+    if (!tripData) return;
+    // If not logged in, prompt login via Google popup
+    if (!user) {
+      setSaveMessage('🔐 Sign in to save your trip!');
+      setTimeout(() => setSaveMessage(''), 3000);
+      try {
+        await signInWithPopup(auth, googleProvider);
+      } catch {
+        // user dismissed popup — that's fine
+      }
+      return;
+    }
+    setIsSaving(true);
+    setSaveMessage('');
+    try {
+      await addDoc(collection(db, 'trips'), {
+        userId: user.uid,
+        tripData: tripData,
+        createdAt: serverTimestamp(),
+      });
+      setSaveMessage('✅ Saved!');
+    } catch (error) {
+      console.error('Error saving trip:', error);
+      setSaveMessage('❌ Failed to save.');
+    } finally {
+      setIsSaving(false);
+      setTimeout(() => setSaveMessage(''), 3000);
+    }
+  };
+
+  const handleLoadSavedTrip = (trip: FullTripItinerary) => {
+    setTripData(trip);
+    setActiveView('planner');
+  };
+
+  const handleBackToPlanner = () => {
+    setTripData(null);
+    setError(null);
+  };
+
   return (
-    <div style={{ padding: '40px', fontFamily: 'sans-serif', maxWidth: '1200px', margin: '0 auto' }}>
-      
-      {/* 1. Show Form if no data and not loading */}
-      {!tripData && !isLoading && (
-        <div style={{ marginTop: '10%' }}>
-          <TripPlannerForm onSubmit={handleFormSubmit} />
-          {error && <p style={{ color: 'red', textAlign: 'center', marginTop: '15px' }}>{error}</p>}
-        </div>
-      )}
+    <div className="app-shell">
+      {/* Navbar — contains Save Trip button when trip is loaded */}
+      <Navbar
+        currentView={activeView}
+        onViewChange={setActiveView}
+        tripData={tripData}
+        onSaveTrip={handleSaveTrip}
+        isSaving={isSaving}
+        saveMessage={saveMessage}
+      />
 
-      {/* 2. Show Premium Loading State */}
-      {isLoading && (
-        <div style={{ textAlign: 'center', marginTop: '15vh' }}>
-          <div className="loading-blob">🧭</div>
-          <h2 style={{ fontSize: '2rem', color: '#0f172a', marginBottom: '10px' }}>
-            Designing your perfect trip...
-          </h2>
-          <p style={{ color: '#64748b', fontSize: '1.1rem', maxWidth: '400px', margin: '0 auto' }}>
-            Our AI is currently scouting locations, calculating optimal routes, and finding hidden gems. This usually takes about 10-15 seconds.
-          </p>
-        </div>
-      )}
+      <div className="app-content">
 
-      {/* 3. Show Dashboard when data arrives */}
-      {tripData && !isLoading && (
-        <div style={{ animation: 'fadeIn 0.5s ease-in-out' }}>
-          
-          {/* Premium Hero Header */}
-          <header style={{ 
-            marginBottom: '40px', 
-            padding: '50px 30px', 
-            borderRadius: '24px', 
-            background: 'linear-gradient(rgba(4, 120, 87, 0.8), rgba(6, 95, 70, 0.9)), url("https://images.unsplash.com/photo-1518509562904-e7ef99cdcc86?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80")',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            color: 'white',
-            position: 'relative',
-            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
-          }}>
-            <button 
-              onClick={() => setTripData(null)} 
-              style={{ position: 'absolute', left: '30px', top: '30px', padding: '10px 20px', cursor: 'pointer', borderRadius: '12px', border: 'none', backgroundColor: 'rgba(255,255,255,0.2)', color: 'white', backdropFilter: 'blur(5px)', fontWeight: 'bold', transition: 'background 0.2s' }}
-            >
-              ← Change Destination
-            </button>
-            <div style={{ textAlign: 'center', marginTop: '20px' }}>
-              <span style={{ backgroundColor: '#10b981', padding: '6px 16px', borderRadius: '20px', fontSize: '0.9rem', fontWeight: 'bold', letterSpacing: '1px', textTransform: 'uppercase' }}>
-                {tripData.metadata.travelStyle} Escape
-              </span>
-              <h1 style={{ fontSize: '3.5rem', margin: '15px 0', textShadow: '0 4px 10px rgba(0,0,0,0.3)' }}>
-                {tripData.metadata.destination}
-              </h1>
-              <p style={{ fontSize: '1.3rem', opacity: 0.9, maxWidth: '600px', margin: '0 auto', textShadow: '0 2px 4px rgba(0,0,0,0.3)' }}>
-                Your custom {tripData.metadata.durationInDays}-day journey, starting from {tripData.metadata.startingPoint}.
-              </p>
-            </div>
-          </header>
+        {/* ── SAVED TRIPS VIEW ── */}
+        {activeView === 'saved' && (
+          <SavedTrips onLoadTrip={handleLoadSavedTrip} />
+        )}
 
-          {/* Grid Layout */}
-          {/* Replace the inline grid styles with className */}
-          <main className="dashboard-grid">
-            <div style={{ width: '100%' }}>
-              <ItineraryTimeline tripData={tripData} />
-            </div>
-            
-            {/* Replace the inline sticky styles with className */}
-            <div className="map-container">
-              <div style={{ borderRadius: '16px', overflow: 'hidden' }}>
-                <TravelMap tripData={tripData} />
+        {/* ── PLANNER VIEW ── */}
+        {activeView === 'planner' && (
+          <>
+            {/* 1. Landing / Form — no trip, not loading */}
+            {!tripData && !isLoading && (
+              <div className="landing-hero">
+                <h1 className="hero-title">
+                  Your Next<br />
+                  <span>Adventure Awaits</span>
+                </h1>
+                <p className="hero-subtitle">
+                  Tell us where you want to go and we'll craft a personalized day-by-day itinerary with maps, local tips, and hidden gems — in seconds.
+                </p>
+
+                <TripPlannerForm onSubmit={handleFormSubmit} />
+
+                {error && (
+                  <div className="error-banner" style={{ maxWidth: 680, marginTop: 16 }}>
+                    ⚠️ {error}
+                  </div>
+                )}
               </div>
-            </div>
-          </main>
-        </div>
-      )}
+            )}
 
+            {/* 2. Loading State */}
+            {isLoading && (
+              <div className="loading-wrapper">
+                <div className="loading-blob">🧭</div>
+                <h2 className="loading-title">Crafting your perfect journey...</h2>
+                <p className="loading-subtitle">
+                  Our AI is scouting locations, calculating optimal routes, and uncovering hidden gems. This takes about 10–15 seconds.
+                </p>
+                <div className="loading-bar">
+                  <div className="loading-bar-fill" />
+                </div>
+              </div>
+            )}
+
+            {/* 3. Dashboard — trip loaded */}
+            {tripData && !isLoading && (
+              <div style={{ animation: 'fadeIn 0.5s ease' }}>
+
+                {/* Hero Trip Header */}
+                <div className="trip-header">
+                  <div className="trip-header-bg" />
+                  <div className="trip-header-overlay" />
+
+                  {/* Top-left Back button — inside header, not fighting navbar */}
+                  <div className="trip-header-actions">
+                    <button className="back-btn" onClick={handleBackToPlanner}>
+                      ← Change Destination
+                    </button>
+                  </div>
+
+                  <div className="trip-header-content">
+                    <div className="trip-style-badge">
+                      {tripData.metadata.travelStyle} Escape
+                    </div>
+                    <h1 className="trip-destination">
+                      {tripData.metadata.destination}
+                    </h1>
+                    <p className="trip-subtitle">
+                      Your custom {tripData.metadata.durationInDays}-day journey,
+                      starting from {tripData.metadata.startingPoint}
+                    </p>
+                    <div className="trip-stats">
+                      <div className="trip-stat">
+                        📅 {tripData.metadata.durationInDays} Days
+                      </div>
+                      <div className="trip-stat">
+                        🗺️ {tripData.itinerary.length} Day Itinerary
+                      </div>
+                      {tripData.recommendedStayArea && (
+                        <div className="trip-stat">
+                          🏨 Stay: {tripData.recommendedStayArea}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Dashboard Grid */}
+                <div className="dashboard-grid">
+
+                  {/* Left: Itinerary Timeline */}
+                  <div className="timeline-panel">
+                    <div className="timeline-panel-header">
+                      <div className="map-dot" />
+                      <span className="timeline-panel-title">Day-by-Day Itinerary</span>
+                    </div>
+                    <ItineraryTimeline tripData={tripData} />
+                  </div>
+
+                  {/* Right: Interactive Map */}
+                  <div className="map-panel">
+                    <div className="map-panel-header">
+                      <div className="map-dot" />
+                      <span className="map-panel-title">Interactive Route Map</span>
+                    </div>
+                    <TravelMap tripData={tripData} />
+                  </div>
+
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 }

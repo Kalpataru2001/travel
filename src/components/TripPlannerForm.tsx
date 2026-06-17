@@ -6,70 +6,115 @@ interface FormProps {
   onSubmit: (query: TripQuery) => void;
 }
 
+const TRAVEL_STYLES: { value: TripQuery['travelStyle']; emoji: string; label: string }[] = [
+  { value: 'Adventure', emoji: '🧗', label: 'Adventure' },
+  { value: 'Relaxation', emoji: '🏖️', label: 'Relaxation' },
+  { value: 'Culture', emoji: '🏛️', label: 'Culture' },
+  { value: 'Luxury', emoji: '✨', label: 'Luxury' },
+  { value: 'Budget', emoji: '🎒', label: 'Budget' },
+];
+
 export default function TripPlannerForm({ onSubmit }: FormProps) {
-  const [destination, setDestination] = useState('');
-  const [duration, setDuration] = useState(3);
-  const [travelStyle, setTravelStyle] = useState<'Adventure' | 'Relaxation' | 'Culture' | 'Luxury' | 'Budget'>('Adventure');
-  const [startingPoint, setStartingPoint] = useState('');
+  const [startingPoint, setStartingPoint] = useState(
+    () => localStorage.getItem('last_start') || ''
+  );
+  const [destination, setDestination] = useState(
+    () => localStorage.getItem('last_dest') || ''
+  );
+  const [duration, setDuration] = useState(
+    () => Number(localStorage.getItem('last_duration')) || 3
+  );
+  const [travelStyle, setTravelStyle] = useState<TripQuery['travelStyle']>(
+    () => (localStorage.getItem('last_style') as TripQuery['travelStyle']) || 'Adventure'
+  );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    localStorage.setItem('last_start', startingPoint);
+    localStorage.setItem('last_dest', destination);
+    localStorage.setItem('last_duration', duration.toString());
+    localStorage.setItem('last_style', travelStyle);
     onSubmit({ destination, durationInDays: duration, travelStyle, startingPoint });
   };
 
-  const inputStyle = {
-    width: '100%', padding: '14px', borderRadius: '10px', 
-    border: '2px solid #e2e8f0', fontSize: '1rem', 
-    fontFamily: 'inherit', boxSizing: 'border-box' as const,
-    backgroundColor: '#f8fafc', 
-    color: '#0f172a', /* <-- This ensures the text is dark slate */
-    transition: 'border-color 0.2s'
-  };
-
   return (
-    <div className="premium-card" style={{ maxWidth: '600px', margin: '0 auto' }}>
-      <h2 style={{ textAlign: 'center', marginBottom: '8px', fontSize: '2rem', color: '#0f172a' }}>
-        Where to next? 🌍
-      </h2>
-      <p style={{ textAlign: 'center', color: '#64748b', marginBottom: '30px' }}>
-        Let AI design your perfect itinerary.
-      </p>
-      
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-        
+    <div className="form-card">
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+
+        {/* Starting Point + Destination */}
         <div className="form-row">
-          <div style={{ flex: 1 }}>
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, color: '#475569' }}>Starting From</label>
-            <input type="text" required placeholder="e.g., Bengaluru" value={startingPoint} onChange={(e) => setStartingPoint(e.target.value)} style={inputStyle} />
+          <div className="form-group">
+            <label className="form-label">🛫 Starting From</label>
+            <input
+              type="text"
+              required
+              placeholder="e.g., Bengaluru"
+              value={startingPoint}
+              onChange={(e) => setStartingPoint(e.target.value)}
+              className="form-input"
+            />
           </div>
-          <div style={{ flex: 1 }}>
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, color: '#475569' }}>Destination</label>
-            <input type="text" required placeholder="e.g., Gokarna" value={destination} onChange={(e) => setDestination(e.target.value)} style={inputStyle} />
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
-          <div style={{ flex: 1 }}>
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, color: '#475569' }}>
-              Duration: <span style={{ color: '#2563eb' }}>{duration} Days</span>
-            </label>
-            <input type="range" min="1" max="14" value={duration} onChange={(e) => setDuration(Number(e.target.value))} style={{ width: '100%', accentColor: '#2563eb' }} />
-          </div>
-
-          <div style={{ flex: 1 }}>
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, color: '#475569' }}>Vibe</label>
-            <select value={travelStyle} onChange={(e) => setTravelStyle(e.target.value as any)} style={inputStyle}>
-              <option value="Adventure">🧗‍♂️ Adventure</option>
-              <option value="Relaxation">🏖️ Relaxation</option>
-              <option value="Culture">🏛️ Culture</option>
-              <option value="Luxury">✨ Luxury</option>
-              <option value="Budget">🎒 Budget</option>
-            </select>
+          <div className="form-group">
+            <label className="form-label">📍 Destination</label>
+            <input
+              type="text"
+              required
+              placeholder="e.g., Gokarna"
+              value={destination}
+              onChange={(e) => setDestination(e.target.value)}
+              className="form-input"
+            />
           </div>
         </div>
 
-        <button type="submit" className="btn-primary" style={{ marginTop: '10px' }}>
-          Generate Itinerary ✨
+        {/* Duration Slider */}
+        <div>
+          <label className="form-label">🗓️ Duration</label>
+          <div className="duration-display">
+            <span>{duration}</span> {duration === 1 ? 'Day' : 'Days'}
+          </div>
+          <input
+            type="range"
+            min="1"
+            max="14"
+            value={duration}
+            onChange={(e) => setDuration(Number(e.target.value))}
+            style={{ width: '100%', accentColor: '#0ea5e9', cursor: 'pointer' }}
+          />
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            fontSize: '0.75rem',
+            color: 'rgba(255,255,255,0.35)',
+            marginTop: '6px'
+          }}>
+            <span>1 Day</span>
+            <span>7 Days</span>
+            <span>14 Days</span>
+          </div>
+        </div>
+
+        {/* Travel Style Cards */}
+        <div>
+          <label className="form-label">🎨 Travel Vibe</label>
+          <div className="style-grid">
+            {TRAVEL_STYLES.map((style) => (
+              <button
+                key={style.value}
+                type="button"
+                className={`style-card ${travelStyle === style.value ? 'selected' : ''}`}
+                onClick={() => setTravelStyle(style.value)}
+              >
+                <span className="style-card-emoji">{style.emoji}</span>
+                <span>{style.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Submit */}
+        <button type="submit" className="btn-primary">
+          Generate My Itinerary ✨
         </button>
       </form>
     </div>
