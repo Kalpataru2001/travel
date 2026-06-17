@@ -1,3 +1,5 @@
+// src/types/travel.ts
+
 export interface TripQuery {
   destination: string;
   durationInDays: number;
@@ -23,8 +25,23 @@ export interface Activity {
 export interface DayItinerary {
   dayNumber: number;
   theme: string;
-  imageKeyword?: string; // Optional day-level image keyword
+  imageKeyword?: string;
   activities: Activity[];
+}
+
+export interface HotelRecommendation {
+  id: string;
+  name: string;
+  area: string;
+  priceRange: string;       // e.g. "₹800–1,200/night"
+  rating: number;           // 1–5
+  tags: string[];           // e.g. ["Free WiFi", "Pool", "Breakfast Included"]
+  whyRecommended: string;   // 1-sentence reason tailored to travel style
+  imageKeyword: string;     // Unsplash search keyword
+  coordinates: {
+    lat: number;
+    lng: number;
+  };
 }
 
 export interface FullTripItinerary {
@@ -33,4 +50,5 @@ export interface FullTripItinerary {
   recommendedStayArea: string;
   localTransportAdvice: string;
   itinerary: DayItinerary[];
+  hotels?: HotelRecommendation[];
 }

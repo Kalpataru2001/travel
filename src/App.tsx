@@ -6,6 +6,7 @@ import ItineraryTimeline from './components/ItineraryTimeline';
 import TripPlannerForm from './components/TripPlannerForm';
 import Navbar from './components/Navbar';
 import SavedTrips from './components/SavedTrips';
+import HotelRecommendations from './components/HotelRecommendations';
 import { generateTravelItinerary } from './utils/gemini';
 import type { FullTripItinerary } from './types/travel';
 import { useAuthState } from 'react-firebase-hooks/auth';
@@ -190,16 +191,39 @@ function App() {
                     <ItineraryTimeline tripData={tripData} />
                   </div>
 
-                  {/* Right: Interactive Map */}
+                  {/* Right: Interactive Map — passes hotel markers too */}
                   <div className="map-panel">
                     <div className="map-panel-header">
                       <div className="map-dot" />
                       <span className="map-panel-title">Interactive Route Map</span>
+                      {tripData.hotels && tripData.hotels.length > 0 && (
+                        <span style={{
+                          marginLeft: 'auto',
+                          fontSize: '0.72rem',
+                          color: '#f59e0b',
+                          fontWeight: 600,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px'
+                        }}>
+                          <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#f59e0b', display: 'inline-block' }} />
+                          Hotels
+                        </span>
+                      )}
                     </div>
-                    <TravelMap tripData={tripData} />
+                    <TravelMap tripData={tripData} hotels={tripData.hotels} />
                   </div>
 
                 </div>
+
+                {/* Hotel Recommendations — below the grid */}
+                {tripData.hotels && tripData.hotels.length > 0 && (
+                  <HotelRecommendations
+                    hotels={tripData.hotels}
+                    destination={tripData.metadata.destination}
+                    travelStyle={tripData.metadata.travelStyle}
+                  />
+                )}
               </div>
             )}
           </>

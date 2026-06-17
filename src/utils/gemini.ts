@@ -11,6 +11,14 @@ export async function generateTravelItinerary(query: TripQuery): Promise<FullTri
     generationConfig: { responseMimeType: 'application/json' },
   });
 
+  const hotelTypeHint =
+    query.travelStyle === 'Budget'      ? 'budget guesthouses, hostels, and homestays' :
+    query.travelStyle === 'Luxury'      ? '5-star hotels, boutique resorts, and luxury properties' :
+    query.travelStyle === 'Adventure'   ? 'eco-lodges, campsites, and nature resorts' :
+    query.travelStyle === 'Culture'     ? 'heritage hotels, havelis, and locally-owned guesthouses' :
+    query.travelStyle === 'Relaxation'  ? 'spa resorts, beachside hotels, and wellness retreats' :
+    'well-rated hotels and guesthouses';
+
   const prompt = `
     You are an expert travel guide. Create a highly realistic, logical ${query.durationInDays}-day itinerary for a ${query.travelStyle} style trip to ${query.destination}, starting from ${query.startingPoint}.
 
@@ -26,6 +34,19 @@ export async function generateTravelItinerary(query: TripQuery): Promise<FullTri
       },
       "recommendedStayArea": "Specific neighborhood or area to stay",
       "localTransportAdvice": "Best ways to get around locally with practical tips",
+      "hotels": [
+        {
+          "id": "hotel_1",
+          "name": "Exact Hotel or Hostel Name",
+          "area": "Neighborhood or locality name",
+          "priceRange": "e.g. ₹800–1,200/night or $30–50/night",
+          "rating": 4.3,
+          "tags": ["Free WiFi", "Rooftop View", "Breakfast Included"],
+          "whyRecommended": "One sentence explaining why this suits a ${query.travelStyle} traveller",
+          "imageKeyword": "descriptive photo keyword e.g. boutique hotel goa pool",
+          "coordinates": { "lat": 15.2993, "lng": 74.1240 }
+        }
+      ],
       "itinerary": [
         {
           "dayNumber": 1,
@@ -47,7 +68,15 @@ export async function generateTravelItinerary(query: TripQuery): Promise<FullTri
       ]
     }
 
-    RULES:
+    HOTEL RULES:
+    1. Generate exactly 4 hotel recommendations — focus on ${hotelTypeHint}.
+    2. All hotels must be real, existing properties in or near ${query.destination}.
+    3. Price range should be realistic for ${query.travelStyle} travel in this region (use local currency ₹ for India).
+    4. Rating must be between 3.5 and 5.0.
+    5. Tags should be 2-4 relevant amenity tags per hotel.
+    6. Hotel coordinates must be real locations in ${query.destination} on solid land.
+
+    ITINERARY RULES:
     1. Generate exactly ${query.durationInDays} day(s) in the itinerary array.
     2. Each day must have 3-4 activities covering Morning, Afternoon, and Evening.
     3. Every activity MUST have real, accurate GPS coordinates (lat/lng) on solid land in ${query.destination}.

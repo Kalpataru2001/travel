@@ -1,7 +1,7 @@
 // src/components/TravelMap.tsx
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import type { FullTripItinerary } from '../types/travel';
+import type { FullTripItinerary, HotelRecommendation } from '../types/travel';
 import L from 'leaflet';
 
 // Fix Leaflet default icon broken in Vite/Webpack builds
@@ -54,11 +54,34 @@ function createDayIcon(color: string, dayNumber: number) {
   });
 }
 
+// Gold hotel marker icon
+const hotelIcon = L.divIcon({
+  className: '',
+  html: `
+    <div style="
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      color: white;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 3px solid white;
+      box-shadow: 0 3px 12px rgba(245,158,11,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    ">🏨</div>`,
+  iconSize: [32, 32],
+  iconAnchor: [16, 16],
+  popupAnchor: [0, -20],
+});
+
 interface TravelMapProps {
   tripData: FullTripItinerary;
+  hotels?: HotelRecommendation[];
 }
 
-export default function TravelMap({ tripData }: TravelMapProps) {
+export default function TravelMap({ tripData, hotels }: TravelMapProps) {
   // Collect ALL activities across all days
   const allActivities = tripData.itinerary.flatMap((day) =>
     day.activities.map((act) => ({ ...act, dayNumber: day.dayNumber, dayTheme: day.theme }))
@@ -111,7 +134,7 @@ export default function TravelMap({ tripData }: TravelMapProps) {
           ) : null
         )}
 
-        {/* Drop a pin for every activity, colored by day */}
+        {/* Activity markers — colored by day */}
         {allActivities.map((activity) => {
           if (!activity.coordinates?.lat || !activity.coordinates?.lng) return null;
           const color = DAY_COLORS[(activity.dayNumber - 1) % DAY_COLORS.length];
@@ -141,6 +164,42 @@ export default function TravelMap({ tripData }: TravelMapProps) {
                       🚗 {activity.transitTimeToNextStop} to next
                     </div>
                   )}
+                </div>
+              </Popup>
+            </Marker>
+          );
+        })}
+
+        {/* Hotel markers — gold pins */}
+        {hotels?.map((hotel, i) => {
+          if (!hotel.coordinates?.lat || !hotel.coordinates?.lng) return null;
+          return (
+            <Marker
+              key={hotel.id || `hotel-${i}`}
+              position={[hotel.coordinates.lat, hotel.coordinates.lng]}
+              icon={hotelIcon}
+            >
+              <Popup>
+                <div style={{ fontFamily: 'Outfit, sans-serif', minWidth: '170px' }}>
+                  <div style={{
+                    fontWeight: 700,
+                    color: '#d97706',
+                    fontSize: '0.72rem',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
+                    marginBottom: '4px'
+                  }}>
+                    🏨 Hotel
+                  </div>
+                  <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#0f172a', marginBottom: '2px' }}>
+                    {hotel.name}
+                  </div>
+                  <div style={{ fontSize: '0.8rem', color: '#64748b', marginBottom: '4px' }}>
+                    📍 {hotel.area}
+                  </div>
+                  <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#d97706' }}>
+                    {hotel.priceRange}
+                  </div>
                 </div>
               </Popup>
             </Marker>
