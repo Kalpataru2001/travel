@@ -1,5 +1,5 @@
 // src/App.tsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import './App.css';
 import TravelMap from './components/TravelMap';
 import ItineraryTimeline from './components/ItineraryTimeline';
@@ -13,7 +13,7 @@ import TravelAssistant from './components/TravelAssistant';
 import { generateTravelItinerary } from './utils/gemini';
 import type { FullTripItinerary } from './types/travel';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore';
 import { auth, db, googleProvider } from './utils/firebase';
 import { signInWithPopup } from 'firebase/auth';
 
@@ -29,14 +29,52 @@ function App() {
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
 
+  const [isSaved, setIsSaved] = useState(false);
+  const [isSharedView, setIsSharedView] = useState(false);
+  const [isSharedLoading, setIsSharedLoading] = useState(false);
+  const [sharedError, setSharedError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const shareId = params.get('share');
+    if (shareId) {
+      setIsSharedView(true);
+      setIsSharedLoading(true);
+      setSharedError(null);
+
+      const fetchSharedTrip = async () => {
+        try {
+          const q = query(collection(db, 'trips'), where('tripData.id', '==', shareId));
+          const querySnapshot = await getDocs(q);
+          if (!querySnapshot.empty) {
+            const docData = querySnapshot.docs[0].data();
+            setTripData(docData.tripData as FullTripItinerary);
+            setIsSaved(true);
+          } else {
+            setSharedError("Shared trip not found. The link might be invalid or expired.");
+          }
+        } catch (err) {
+          console.error("Error loading shared trip:", err);
+          setSharedError("Could not load shared trip. Please try again.");
+        } finally {
+          setIsSharedLoading(false);
+        }
+      };
+
+      fetchSharedTrip();
+    }
+  }, []);
+
   const handleFormSubmit = async (query: any) => {
     setIsLoading(true);
     setError(null);
     setTripData(null);
     setCurrentTemp(undefined);
     setCurrentCondition(undefined);
+    setIsSaved(false);
     try {
       const generatedTrip = await generateTravelItinerary(query);
+      generatedTrip.id = `trip_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       setTripData(generatedTrip);
     } catch (err) {
       setError("Oops! The AI got lost finding your route. Please try again.");
@@ -47,14 +85,13 @@ function App() {
 
   const handleSaveTrip = async () => {
     if (!tripData) return;
-    // If not logged in, prompt login via Google popup
     if (!user) {
       setSaveMessage('🔐 Sign in to save your trip!');
       setTimeout(() => setSaveMessage(''), 3000);
       try {
         await signInWithPopup(auth, googleProvider);
       } catch {
-        // user dismissed popup — that's fine
+        // user dismissed popup
       }
       return;
     }
@@ -67,6 +104,7 @@ function App() {
         createdAt: serverTimestamp(),
       });
       setSaveMessage('✅ Saved!');
+      setIsSaved(true);
     } catch (error) {
       console.error('Error saving trip:', error);
       setSaveMessage('❌ Failed to save.');
@@ -76,10 +114,59 @@ function App() {
     }
   };
 
+  const handleSaveSharedTrip = async () => {
+    if (!tripData) return;
+    if (!user) {
+      setSaveMessage('🔐 Sign in to copy this trip!');
+      setTimeout(() => setSaveMessage(''), 3000);
+      try {
+        await signInWithPopup(auth, googleProvider);
+      } catch {
+        // user dismissed popup
+      }
+      return;
+    }
+    setIsSaving(true);
+    setSaveMessage('');
+    try {
+      const clonedTrip = {
+        ...tripData,
+        id: `trip_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      };
+      await addDoc(collection(db, 'trips'), {
+        userId: user.uid,
+        tripData: clonedTrip,
+        createdAt: serverTimestamp(),
+      });
+      setSaveMessage('🎉 Saved to My Trips!');
+      setTripData(clonedTrip);
+      setIsSaved(true);
+      setIsSharedView(false);
+      window.history.replaceState({}, document.title, window.location.origin + window.location.pathname);
+    } catch (error) {
+      console.error('Error copying shared trip:', error);
+      setSaveMessage('❌ Failed to copy.');
+    } finally {
+      setIsSaving(false);
+      setTimeout(() => setSaveMessage(''), 3000);
+    }
+  };
+
+  const handleExitShareView = () => {
+    window.history.replaceState({}, document.title, window.location.origin + window.location.pathname);
+    setTripData(null);
+    setIsSharedView(false);
+    setSharedError(null);
+    setIsSaved(false);
+    setActiveView('planner');
+  };
+
   const handleLoadSavedTrip = (trip: FullTripItinerary) => {
     setTripData(trip);
     setCurrentTemp(undefined);
     setCurrentCondition(undefined);
+    setIsSaved(true);
+    setIsSharedView(false);
     setActiveView('planner');
   };
 
@@ -88,6 +175,8 @@ function App() {
     setError(null);
     setCurrentTemp(undefined);
     setCurrentCondition(undefined);
+    setIsSaved(false);
+    setIsSharedView(false);
   };
 
   return (
@@ -100,6 +189,10 @@ function App() {
         onSaveTrip={handleSaveTrip}
         isSaving={isSaving}
         saveMessage={saveMessage}
+        isSaved={isSaved}
+        isSharedView={isSharedView}
+        onSaveSharedTrip={handleSaveSharedTrip}
+        onExitShareView={handleExitShareView}
       />
 
       <div className="app-content">
@@ -112,8 +205,34 @@ function App() {
         {/* ── PLANNER VIEW ── */}
         {activeView === 'planner' && (
           <>
-            {/* 1. Landing / Form — no trip, not loading */}
-            {!tripData && !isLoading && (
+            {/* Shared Trip Loading State */}
+            {isSharedLoading && (
+              <div className="loading-wrapper">
+                <div className="loading-blob">🧭</div>
+                <h2 className="loading-title">Loading shared adventure...</h2>
+                <p className="loading-subtitle">
+                  We are fetching this itinerary from the cloud database.
+                </p>
+                <div className="loading-bar">
+                  <div className="loading-bar-fill" />
+                </div>
+              </div>
+            )}
+
+            {/* Shared Trip Error State */}
+            {sharedError && !isSharedLoading && (
+              <div className="empty-state" style={{ padding: '60px 20px', animation: 'fadeIn 0.5s ease' }}>
+                <div className="empty-state-icon">⚠️</div>
+                <h2 className="empty-state-title">Unable to Load Trip</h2>
+                <p className="empty-state-text" style={{ maxWidth: 450, margin: '8px auto 24px auto' }}>{sharedError}</p>
+                <button className="save-trip-btn" onClick={handleExitShareView}>
+                  🛫 Plan Your Own Journey
+                </button>
+              </div>
+            )}
+
+            {/* 1. Landing / Form — no trip, not loading, no shared views loading/errored */}
+            {!tripData && !isLoading && !isSharedLoading && !sharedError && (
               <div className="landing-hero">
                 <h1 className="hero-title">
                   Your Next<br />
@@ -148,8 +267,18 @@ function App() {
             )}
 
             {/* 3. Dashboard — trip loaded */}
-            {tripData && !isLoading && (
+            {tripData && !isLoading && !isSharedLoading && (
               <div style={{ animation: 'fadeIn 0.5s ease' }}>
+
+                {/* Shared View Banner */}
+                {isSharedView && (
+                  <div className="shared-trip-banner">
+                    <span className="shared-banner-icon">🌍</span>
+                    <span className="shared-banner-text">
+                      You are viewing a shared travel preview. Click <strong>"Save to My Trips"</strong> in the top bar to save a copy to your account!
+                    </span>
+                  </div>
+                )}
 
                 {/* Hero Trip Header */}
                 <div className="trip-header">

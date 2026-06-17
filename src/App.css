@@ -2417,3 +2417,32 @@ input[type="range"] {
     height: 50px;
   }
 }
+
+/* ============================================================
+   SHARED TRIP PREVIEW BANNER
+   ============================================================ */
+.shared-trip-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: linear-gradient(90deg, 
+    rgba(14, 165, 233, 0.15) 0%, 
+    rgba(99, 102, 241, 0.1) 100%);
+  border: 1px solid rgba(14, 165, 233, 0.25);
+  border-radius: var(--radius-md);
+  padding: 14px 20px;
+  margin-top: 24px;
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 500;
+  animation: fadeIn 0.5s ease;
+  backdrop-filter: blur(8px);
+}
+
+.shared-banner-icon {
+  font-size: 1.2rem;
+}
+
+.shared-banner-text strong {
+  color: var(--primary);
+}
