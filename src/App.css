@@ -2462,3 +2462,195 @@ input[type="range"] {
 .shared-banner-text strong {
   color: var(--primary);
 }
+
+/* ============================================================
+   PRINT AND PDF EXPORT STYLES (@media print)
+   ============================================================ */
+@media print {
+  /* Reset background and text colors to be print friendly */
+  body, html, .app-shell, .app-content, .trip-header, .timeline-panel, .packing-list-section, .hotels-section, .weather-widget, .packing-column, .packing-item-row, .hotel-card {
+    background: #ffffff !important;
+    background-image: none !important;
+    color: #0f172a !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  /* Text color adjustments for print legibility */
+  h1, h2, h3, h4, h5, h6, .trip-destination, .packing-list-title, .hotels-title, .timeline-panel-title, .hotel-name {
+    color: #0f172a !important;
+  }
+
+  .trip-subtitle, .packing-list-subtitle, .hotels-subtitle, .weather-location, .weather-desc, .weather-forecast-label, .packing-item-text, .hotel-area, .hotel-why {
+    color: #475569 !important;
+  }
+
+  /* Hide interactive/non-printable components */
+  .no-print,
+  .navbar,
+  .trip-header-actions,
+  .map-panel,
+  .assistant-float-btn,
+  .assistant-drawer,
+  .packing-actions,
+  .packing-add-form,
+  .packing-item-delete,
+  .weather-loading,
+  .weather-error {
+    display: none !important;
+  }
+
+  /* Page setup */
+  @page {
+    size: A4 portrait;
+    margin: 1.5cm;
+  }
+
+  /* Make content take full width */
+  .app-content {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+
+  /* Cover Page formatting (Trip Header) */
+  .trip-header {
+    height: auto !important;
+    padding: 40px 0 !important;
+    border-bottom: 2px solid #e2e8f0 !important;
+    page-break-after: always; /* Force first page break after header */
+  }
+
+  .trip-header-bg, .trip-header-overlay {
+    display: none !important;
+  }
+
+  .trip-style-badge {
+    border: 1.5px solid #0ea5e9 !important;
+    color: #0ea5e9 !important;
+    background: transparent !important;
+  }
+
+  .trip-stats {
+    margin-top: 20px !important;
+  }
+
+  .trip-stat {
+    border: 1px solid #cbd5e1 !important;
+    background: transparent !important;
+    color: #0f172a !important;
+  }
+
+  /* Weather Widget formatting */
+  .weather-widget {
+    border: 1px solid #e2e8f0 !important;
+    margin-top: 0 !important;
+    margin-bottom: 24px !important;
+    page-break-inside: avoid;
+  }
+
+  .weather-label {
+    border: 1px solid #0ea5e9 !important;
+    color: #0ea5e9 !important;
+    background: transparent !important;
+  }
+
+  .weather-forecast-day {
+    background: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+  }
+
+  /* Itinerary formatting */
+  .dashboard-grid {
+    display: block !important;
+  }
+
+  .timeline-panel {
+    border: none !important;
+    height: auto !important;
+    padding: 0 !important;
+  }
+
+  .timeline-scroll {
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  .day-card {
+    page-break-inside: avoid; /* Prevent a single day block from splitting across pages */
+    border: 1px solid #e2e8f0 !important;
+    background: #f8fafc !important;
+    margin-bottom: 20px !important;
+  }
+
+  /* Hotels Grid formatting */
+  .hotels-section {
+    page-break-before: always; /* Start hotels on a fresh page */
+    padding-top: 24px !important;
+  }
+
+  .hotels-scroll-container {
+    overflow: visible !important;
+  }
+
+  .hotels-scroll-track {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 20px !important;
+    width: 100% !important;
+  }
+
+  .hotel-card {
+    page-break-inside: avoid !important;
+    border: 1px solid #e2e8f0 !important;
+  }
+
+  .hotel-price-badge {
+    background: #0ea5e9 !important;
+    color: white !important;
+  }
+
+  .hotel-tag {
+    background: #f1f5f9 !important;
+    border: 1px solid #e2e8f0 !important;
+    color: #475569 !important;
+  }
+
+  /* Packing Checklist formatting */
+  .packing-list-section {
+    page-break-before: always; /* Start packing checklist on a fresh page */
+    border: none !important;
+    padding: 0 !important;
+    margin-top: 24px !important;
+  }
+
+  .packing-progress-container {
+    border: 1px solid #e2e8f0 !important;
+  }
+
+  .packing-progress-stats {
+    color: #0ea5e9 !important;
+  }
+
+  .packing-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 16px !important;
+  }
+
+  .packing-column {
+    border: 1px solid #e2e8f0 !important;
+    background: #f8fafc !important;
+  }
+
+  .packing-checkbox-input {
+    border-color: #cbd5e1 !important;
+  }
+
+  .packing-checkbox-input:checked {
+    background: #0ea5e9 !important;
+    border-color: #0ea5e9 !important;
+  }
+}

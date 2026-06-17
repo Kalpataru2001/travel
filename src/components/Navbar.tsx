@@ -52,7 +52,7 @@ export default function Navbar({
   };
 
   return (
-    <nav className="navbar">
+    <nav className="navbar no-print">
       {/* Brand / Logo */}
       <div 
         className="navbar-brand" 
@@ -105,6 +105,9 @@ export default function Navbar({
             <button className="nav-tab active" style={{ height: '36px', padding: '0 16px' }} onClick={handleCopyLink}>
               {copied ? 'Copied! 🔗' : '🔗 Copy Link'}
             </button>
+            <button className="nav-tab" style={{ height: '36px', padding: '0 16px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }} onClick={() => window.print()}>
+              📄 Export PDF
+            </button>
             <button className="signout-btn" style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.15)' }} onClick={onExitShareView}>
               🛫 Plan My Own
             </button>
@@ -119,17 +122,27 @@ export default function Navbar({
             )}
 
             {isSaved ? (
-              <button className="nav-tab active" style={{ height: '36px', padding: '0 16px' }} onClick={handleCopyLink}>
-                {copied ? 'Copied! 🔗' : '🔗 Share Link'}
-              </button>
+              <>
+                <button className="nav-tab active" style={{ height: '36px', padding: '0 16px' }} onClick={handleCopyLink}>
+                  {copied ? 'Copied! 🔗' : '🔗 Share Link'}
+                </button>
+                <button className="nav-tab" style={{ height: '36px', padding: '0 16px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }} onClick={() => window.print()}>
+                  📄 Export PDF
+                </button>
+              </>
             ) : (
-              <button
-                className="save-trip-btn"
-                onClick={onSaveTrip}
-                disabled={isSaving}
-              >
-                {isSaving ? <>⏳ Saving...</> : <>💾 Save Trip</>}
-              </button>
+              <>
+                <button
+                  className="save-trip-btn"
+                  onClick={onSaveTrip}
+                  disabled={isSaving}
+                >
+                  {isSaving ? <>⏳ Saving...</> : <>💾 Save Trip</>}
+                </button>
+                <button className="nav-tab" style={{ height: '36px', padding: '0 16px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }} onClick={() => window.print()}>
+                  📄 Export PDF
+                </button>
+              </>
             )}
           </div>
         )}
