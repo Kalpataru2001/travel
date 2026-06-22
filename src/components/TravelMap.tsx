@@ -1,4 +1,4 @@
-// src/components/TravelMap.tsx
+import { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import type { FullTripItinerary, HotelRecommendation } from '../types/travel';
@@ -82,19 +82,97 @@ interface TravelMapProps {
 }
 
 export default function TravelMap({ tripData, hotels }: TravelMapProps) {
+  const [routedPolylines, setRoutedPolylines] = useState<{ dayNumber: number; color: string; positions: [number, number][] }[]>([]);
+  const [useRoadRouting, setUseRoadRouting] = useState(true);
+  const [isLoadingRoutes, setIsLoadingRoutes] = useState(false);
+
   // Collect ALL activities across all days
   const allActivities = tripData.itinerary.flatMap((day) =>
     day.activities.map((act) => ({ ...act, dayNumber: day.dayNumber, dayTheme: day.theme }))
   );
 
-  // Build one polyline per day for color-coded routes
-  const dayPolylines = tripData.itinerary.map((day) => ({
+  // Build straight fallback polylines (renders instantly)
+  const straightPolylines = tripData.itinerary.map((day) => ({
     dayNumber: day.dayNumber,
     color: DAY_COLORS[(day.dayNumber - 1) % DAY_COLORS.length],
     positions: day.activities
       .filter((a) => a.coordinates?.lat && a.coordinates?.lng)
       .map((a) => [a.coordinates.lat, a.coordinates.lng] as [number, number]),
   }));
+
+  // Fetch driving routes dynamically on load/destination change
+  useEffect(() => {
+    let cancelled = false;
+
+    // Set fallback straight polylines initially
+    setRoutedPolylines(straightPolylines);
+
+    const fetchRoadRoutes = async () => {
+      setIsLoadingRoutes(true);
+      try {
+        const routesData = await Promise.all(
+          tripData.itinerary.map(async (day) => {
+            const color = DAY_COLORS[(day.dayNumber - 1) % DAY_COLORS.length];
+            const coords = day.activities
+              .filter((a) => a.coordinates?.lat && a.coordinates?.lng)
+              .map((a) => ({ lat: a.coordinates.lat, lng: a.coordinates.lng }));
+
+            if (coords.length < 2) {
+              return {
+                dayNumber: day.dayNumber,
+                color,
+                positions: coords.map((c) => [c.lat, c.lng] as [number, number]),
+              };
+            }
+
+            const coordString = coords.map((c) => `${c.lng},${c.lat}`).join(';');
+            const url = `https://router.project-osrm.org/route/v1/driving/${coordString}?overview=full&geometries=geojson`;
+
+            try {
+              const res = await fetch(url);
+              if (!res.ok) throw new Error('OSRM routing request failed');
+              const data = await res.json();
+              if (data.code === 'Ok' && data.routes?.[0]?.geometry?.coordinates) {
+                const routedCoords = data.routes[0].geometry.coordinates.map(
+                  (c: [number, number]) => [c[1], c[0]] as [number, number]
+                );
+                return {
+                  dayNumber: day.dayNumber,
+                  color,
+                  positions: routedCoords,
+                };
+              }
+            } catch (err) {
+              console.warn(`Could not compute road routing for Day ${day.dayNumber}:`, err);
+            }
+
+            // Fallback to straight line coordinates
+            return {
+              dayNumber: day.dayNumber,
+              color,
+              positions: coords.map((c) => [c.lat, c.lng] as [number, number]),
+            };
+          })
+        );
+
+        if (!cancelled) {
+          setRoutedPolylines(routesData);
+        }
+      } catch (err) {
+        console.error('Error fetching road routes:', err);
+      } finally {
+        if (!cancelled) {
+          setIsLoadingRoutes(false);
+        }
+      }
+    };
+
+    fetchRoadRoutes();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [tripData]);
 
   // Center map on the first valid coordinate
   const firstValid = allActivities.find(
@@ -105,7 +183,23 @@ export default function TravelMap({ tripData, hotels }: TravelMapProps) {
     : [20.5937, 78.9629]; // India fallback
 
   return (
-    <div style={{ height: '520px', width: '100%' }}>
+    <div style={{ position: 'relative', height: '520px', width: '100%' }}>
+      {/* Route Control Panel Overlay */}
+      <div className="map-routing-toggle no-print">
+        <label className="routing-toggle-label">
+          <input
+            type="checkbox"
+            checked={useRoadRouting}
+            onChange={(e) => setUseRoadRouting(e.target.checked)}
+            className="routing-toggle-checkbox"
+          />
+          <span className="routing-toggle-icon">🚗</span>
+          <span className="routing-toggle-text">
+            {isLoadingRoutes ? '⏳ Loading roads...' : 'Follow Roads'}
+          </span>
+        </label>
+      </div>
+
       <MapContainer
         center={center}
         zoom={11}
@@ -118,17 +212,17 @@ export default function TravelMap({ tripData, hotels }: TravelMapProps) {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
-        {/* Color-coded polyline per day */}
-        {dayPolylines.map((day) =>
+        {/* Color-coded polylines (either snap-to-road or straight line) */}
+        {(useRoadRouting ? routedPolylines : straightPolylines).map((day) =>
           day.positions.length > 1 ? (
             <Polyline
               key={`line-${day.dayNumber}`}
               positions={day.positions}
               pathOptions={{
                 color: day.color,
-                dashArray: '8, 6',
-                weight: 3,
-                opacity: 0.85,
+                dashArray: useRoadRouting ? undefined : '8, 6',
+                weight: useRoadRouting ? 4 : 3,
+                opacity: useRoadRouting ? 0.9 : 0.85,
               }}
             />
           ) : null
