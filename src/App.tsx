@@ -8,6 +8,7 @@ import Navbar from './components/Navbar';
 import SavedTrips from './components/SavedTrips';
 import HotelRecommendations from './components/HotelRecommendations';
 import WeatherWidget from './components/WeatherWidget';
+import CurrencyConverter from './components/CurrencyConverter';
 import PackingList from './components/PackingList';
 import TravelAssistant from './components/TravelAssistant';
 import { generateTravelItinerary } from './utils/gemini';
@@ -319,14 +320,17 @@ function App() {
                   </div>
                 </div>
 
-                {/* Live Weather Widget — below trip header */}
-                <WeatherWidget
-                  destination={tripData.metadata.destination}
-                  onWeatherLoaded={(temp, cond) => {
-                    setCurrentTemp(temp);
-                    setCurrentCondition(cond);
-                  }}
-                />
+                {/* Widgets Grid: Weather & Currency */}
+                <div className="widgets-grid no-print">
+                  <WeatherWidget
+                    destination={tripData.metadata.destination}
+                    onWeatherLoaded={(temp, cond) => {
+                      setCurrentTemp(temp);
+                      setCurrentCondition(cond);
+                    }}
+                  />
+                  <CurrencyConverter destination={tripData.metadata.destination} />
+                </div>
 
                 {/* Dashboard Grid */}
                 <div className="dashboard-grid">
