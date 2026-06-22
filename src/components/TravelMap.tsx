@@ -85,6 +85,18 @@ export default function TravelMap({ tripData, hotels }: TravelMapProps) {
   const [routedPolylines, setRoutedPolylines] = useState<{ dayNumber: number; color: string; positions: [number, number][] }[]>([]);
   const [useRoadRouting, setUseRoadRouting] = useState(true);
   const [isLoadingRoutes, setIsLoadingRoutes] = useState(false);
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
+
+  useEffect(() => {
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   // Collect ALL activities across all days
   const allActivities = tripData.itinerary.flatMap((day) =>
@@ -199,6 +211,16 @@ export default function TravelMap({ tripData, hotels }: TravelMapProps) {
           </span>
         </label>
       </div>
+
+      {/* Offline Map Warning Banner */}
+      {isOffline && (
+        <div className="map-offline-banner no-print">
+          <span className="map-offline-icon">🔌</span>
+          <span className="map-offline-text">
+            Offline Mode: Using cached map tiles. Route points remain active.
+          </span>
+        </div>
+      )}
 
       <MapContainer
         center={center}

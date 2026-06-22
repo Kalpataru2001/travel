@@ -60,4 +60,5 @@ export interface FullTripItinerary {
   itinerary: DayItinerary[];
   hotels?: HotelRecommendation[];
   packingList?: PackingItem[];
+  unsynced?: boolean;
 }

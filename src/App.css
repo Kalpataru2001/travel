@@ -2847,6 +2847,100 @@ input[type="range"] {
 }
 
 /* ============================================================
+   OFFLINE MODE & SYNC INDICATORS
+   ============================================================ */
+.offline-badge {
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  padding: 3px 8px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: inline-flex;
+  align-items: center;
+  height: fit-content;
+  align-self: center;
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.1);
+}
+
+.unsynced-card-badge {
+  font-size: 0.65rem;
+  font-weight: 750;
+  color: var(--accent);
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  padding: 2px 8px;
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  display: inline-flex;
+  align-self: flex-start;
+}
+
+.map-offline-banner {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  z-index: 1000;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  border-radius: var(--radius-md);
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  max-width: calc(100% - 24px);
+  animation: fadeIn 0.3s ease;
+}
+
+.map-offline-icon {
+  font-size: 1rem;
+}
+
+.map-offline-text {
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  letter-spacing: 0.1px;
+  line-height: 1.2;
+}
+
+.sync-alert-banner {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(59, 130, 246, 0.1) 100%);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  border-radius: var(--radius-lg);
+  padding: 12px 20px;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  animation: slideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 10px 25px rgba(16, 185, 129, 0.15);
+}
+
+.sync-banner-icon {
+  font-size: 1.2rem;
+}
+
+@keyframes slideDown {
+  from { transform: translateY(-20px); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+
+/* ============================================================
    PRINT AND PDF EXPORT STYLES (@media print)
    ============================================================ */
 @media print {

@@ -13,6 +13,7 @@ import PackingList from './components/PackingList';
 import TravelAssistant from './components/TravelAssistant';
 import { generateTravelItinerary } from './utils/gemini';
 import type { FullTripItinerary } from './types/travel';
+import { syncOfflineTrips } from './utils/sync';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { collection, addDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore';
 import { auth, db, googleProvider } from './utils/firebase';
@@ -34,6 +35,9 @@ function App() {
   const [isSharedView, setIsSharedView] = useState(false);
   const [isSharedLoading, setIsSharedLoading] = useState(false);
   const [sharedError, setSharedError] = useState<string | null>(null);
+
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
+  const [syncMessage, setSyncMessage] = useState('');
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -63,8 +67,70 @@ function App() {
       };
 
       fetchSharedTrip();
+    } else {
+      const cachedTrip = localStorage.getItem('travel_active_trip_cache');
+      const cachedSaved = localStorage.getItem('travel_active_trip_is_saved');
+      if (cachedTrip) {
+        try {
+          setTripData(JSON.parse(cachedTrip));
+          if (cachedSaved) {
+            setIsSaved(JSON.parse(cachedSaved));
+          }
+        } catch (err) {
+          console.warn('Error reading active trip cache:', err);
+        }
+      }
     }
   }, []);
+
+  // Save active trip to cache when it changes
+  useEffect(() => {
+    if (tripData) {
+      localStorage.setItem('travel_active_trip_cache', JSON.stringify(tripData));
+      localStorage.setItem('travel_active_trip_is_saved', JSON.stringify(isSaved));
+    } else {
+      localStorage.removeItem('travel_active_trip_cache');
+      localStorage.removeItem('travel_active_trip_is_saved');
+    }
+  }, [tripData, isSaved]);
+
+  // Track connection state & auto sync when coming back online
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOffline(false);
+      if (user) {
+        triggerSync(user.uid);
+      }
+    };
+    const handleOffline = () => setIsOffline(true);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, [user]);
+
+  // Trigger sync on logged-in mount
+  useEffect(() => {
+    if (user && !isOffline) {
+      triggerSync(user.uid);
+    }
+  }, [user, isOffline]);
+
+  const triggerSync = async (userId: string) => {
+    try {
+      const syncedCount = await syncOfflineTrips(userId);
+      if (syncedCount > 0) {
+        setSyncMessage(`Synced ${syncedCount} offline trip${syncedCount === 1 ? '' : 's'} to cloud!`);
+        setTimeout(() => setSyncMessage(''), 4000);
+      }
+    } catch (err) {
+      console.error('Auto sync failed:', err);
+    }
+  };
 
   const handleFormSubmit = async (query: any) => {
     setIsLoading(true);
@@ -98,6 +164,37 @@ function App() {
     }
     setIsSaving(true);
     setSaveMessage('');
+
+    if (!navigator.onLine) {
+      try {
+        const cached = localStorage.getItem('travel_saved_trips_cache');
+        let trips: FullTripItinerary[] = [];
+        if (cached) {
+          trips = JSON.parse(cached);
+        }
+
+        const existsIdx = trips.findIndex((t) => t.id === tripData.id);
+        const tripWithSyncFlag = { ...tripData, unsynced: true };
+
+        if (existsIdx >= 0) {
+          trips[existsIdx] = tripWithSyncFlag;
+        } else {
+          trips.push(tripWithSyncFlag);
+        }
+
+        localStorage.setItem('travel_saved_trips_cache', JSON.stringify(trips));
+        setSaveMessage('✅ Saved locally (offline)!');
+        setIsSaved(true);
+      } catch (err) {
+        console.error('Offline save failed:', err);
+        setSaveMessage('❌ Failed to save locally.');
+      } finally {
+        setIsSaving(false);
+        setTimeout(() => setSaveMessage(''), 3000);
+      }
+      return;
+    }
+
     try {
       await addDoc(collection(db, 'trips'), {
         userId: user.uid,
@@ -106,6 +203,20 @@ function App() {
       });
       setSaveMessage('✅ Saved!');
       setIsSaved(true);
+
+      // Cache locally as well
+      const cached = localStorage.getItem('travel_saved_trips_cache');
+      let trips: FullTripItinerary[] = [];
+      if (cached) {
+        trips = JSON.parse(cached);
+      }
+      const existsIdx = trips.findIndex((t) => t.id === tripData.id);
+      if (existsIdx >= 0) {
+        trips[existsIdx] = tripData;
+      } else {
+        trips.push(tripData);
+      }
+      localStorage.setItem('travel_saved_trips_cache', JSON.stringify(trips));
     } catch (error) {
       console.error('Error saving trip:', error);
       setSaveMessage('❌ Failed to save.');
@@ -194,6 +305,7 @@ function App() {
         isSharedView={isSharedView}
         onSaveSharedTrip={handleSaveSharedTrip}
         onExitShareView={handleExitShareView}
+        isOffline={isOffline}
       />
 
       <div className="app-content">
@@ -270,6 +382,14 @@ function App() {
             {/* 3. Dashboard — trip loaded */}
             {tripData && !isLoading && !isSharedLoading && (
               <div style={{ animation: 'fadeIn 0.5s ease' }}>
+
+                {/* Sync Alert Banner */}
+                {syncMessage && (
+                  <div className="sync-alert-banner">
+                    <span className="sync-banner-icon">✨</span>
+                    <span>{syncMessage}</span>
+                  </div>
+                )}
 
                 {/* Shared View Banner */}
                 {isSharedView && (

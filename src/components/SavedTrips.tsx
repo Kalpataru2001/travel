@@ -30,10 +30,35 @@ export default function SavedTrips({ onLoadTrip }: SavedTripsProps) {
   const [user] = useAuthState(auth);
   const [savedTrips, setSavedTrips] = useState<FullTripItinerary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
+
+  useEffect(() => {
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   useEffect(() => {
     const fetchTrips = async () => {
       if (!user) {
+        setIsLoading(false);
+        return;
+      }
+
+      if (!navigator.onLine) {
+        const cached = localStorage.getItem('travel_saved_trips_cache');
+        if (cached) {
+          try {
+            setSavedTrips(JSON.parse(cached));
+          } catch (err) {
+            console.error('Error parsing cached saved trips:', err);
+          }
+        }
         setIsLoading(false);
         return;
       }
@@ -48,8 +73,16 @@ export default function SavedTrips({ onLoadTrip }: SavedTripsProps) {
         });
 
         setSavedTrips(trips);
+        localStorage.setItem('travel_saved_trips_cache', JSON.stringify(trips));
       } catch (error) {
         console.error('Error fetching trips:', error);
+        // Fallback to cache on error
+        const cached = localStorage.getItem('travel_saved_trips_cache');
+        if (cached) {
+          try {
+            setSavedTrips(JSON.parse(cached));
+          } catch (err) {}
+        }
       } finally {
         setIsLoading(false);
       }
@@ -95,9 +128,12 @@ export default function SavedTrips({ onLoadTrip }: SavedTripsProps) {
   return (
     <div className="saved-trips-wrapper">
       <div className="saved-trips-header">
-        <h2 className="saved-trips-title">My Adventures</h2>
+        <h2 className="saved-trips-title" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          My Adventures
+          {isOffline && <span className="offline-badge">Offline</span>}
+        </h2>
         <p className="saved-trips-subtitle">
-          {savedTrips.length} saved {savedTrips.length === 1 ? 'trip' : 'trips'} · Click any to reload the itinerary
+          {savedTrips.length} saved {savedTrips.length === 1 ? 'trip' : 'trips'} · {isOffline ? 'Viewing cached itineraries' : 'Click any to reload the itinerary'}
         </p>
       </div>
 
@@ -110,7 +146,14 @@ export default function SavedTrips({ onLoadTrip }: SavedTripsProps) {
               className="trip-card-header"
               style={{ background: HEADER_GRADIENTS[index % HEADER_GRADIENTS.length] }}
             >
-              <h3 className="trip-card-dest">{trip.metadata.destination}</h3>
+              <h3 className="trip-card-dest" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%' }}>
+                <span>{trip.metadata.destination}</span>
+                {trip.unsynced && (
+                  <span className="unsynced-card-badge" title="Stored locally. Syncs when online.">
+                    💾 Local
+                  </span>
+                )}
+              </h3>
             </div>
 
             {/* Card Body */}

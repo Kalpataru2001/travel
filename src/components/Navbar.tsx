@@ -15,6 +15,7 @@ interface NavbarProps {
   isSharedView?: boolean;
   onSaveSharedTrip?: () => void;
   onExitShareView?: () => void;
+  isOffline?: boolean;
 }
 
 export default function Navbar({
@@ -28,6 +29,7 @@ export default function Navbar({
   isSharedView = false,
   onSaveSharedTrip,
   onExitShareView,
+  isOffline = false,
 }: NavbarProps) {
   const [user] = useAuthState(auth);
   const [copied, setCopied] = useState(false);
@@ -66,6 +68,7 @@ export default function Navbar({
       >
         <div className="navbar-logo-icon">🌍</div>
         <span className="navbar-brand-text">AI Travel Guide</span>
+        {isOffline && <span className="offline-badge">Offline</span>}
       </div>
 
       {/* Center Navigation Tabs — hidden during shared view */}
