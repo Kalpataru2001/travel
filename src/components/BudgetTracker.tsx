@@ -2,6 +2,7 @@
 import React, { useState, useMemo, useRef } from 'react';
 import type { FullTripItinerary, ExpenseItem } from '../types/travel';
 import { POPULAR_CURRENCIES, getFallbackRatesForBase } from '../utils/currency';
+import { generateDefaultBudget } from '../utils/budget';
 
 interface BudgetTrackerProps {
   tripData: FullTripItinerary;
@@ -15,6 +16,16 @@ const CATEGORY_COLORS: Record<string, string> = {
   Activities:    '#10b981',
   Shopping:      '#ec4899',
   Others:        '#64748b'
+};
+
+// Default proportional distribution per travel style
+const DISTRIBUTIONS: Record<string, Record<string, number>> = {
+  Budget:     { Accommodation: 0.35, Transport: 0.20, Food: 0.30, Activities: 0.10, Shopping: 0.05, Others: 0.00 },
+  Luxury:     { Accommodation: 0.45, Transport: 0.15, Food: 0.20, Activities: 0.10, Shopping: 0.08, Others: 0.02 },
+  Adventure:  { Accommodation: 0.30, Transport: 0.15, Food: 0.25, Activities: 0.25, Shopping: 0.03, Others: 0.02 },
+  Relaxation: { Accommodation: 0.45, Transport: 0.10, Food: 0.25, Activities: 0.15, Shopping: 0.03, Others: 0.02 },
+  Culture:    { Accommodation: 0.35, Transport: 0.15, Food: 0.25, Activities: 0.20, Shopping: 0.03, Others: 0.02 },
+  Default:    { Accommodation: 0.40, Transport: 0.15, Food: 0.25, Activities: 0.15, Shopping: 0.05, Others: 0.00 },
 };
 
 const CATEGORY_ICONS: Record<string, string> = {
@@ -49,10 +60,39 @@ export default function BudgetTracker({ tripData, onUpdateTripData }: BudgetTrac
   const budgetData = tripData.budgetData;
   if (!budgetData) return null;
 
-  const currentCurrency = budgetData.currency || 'INR';
+  const preferredCurrency = localStorage.getItem('travel_user_preferred_currency') || 'INR';
+
+  // ── Stale-cache guard ─────────────────────────────────────────────────────
+  // Old trips saved before the INR update have no `currency` field, meaning
+  // their categoryBudgets are in raw USD cents (e.g. ₹53 instead of ₹4,400).
+  // Detect this and regenerate the budget fresh in the user's preferred currency.
+  const categoryBudgetSum = Object.values(budgetData.categoryBudgets).reduce((a, b) => a + b, 0);
+  const totalBudget = budgetData.totalBudget;
+  const isStaleUSDData =
+    !budgetData.currency &&
+    totalBudget > 500 &&
+    categoryBudgetSum > 0 &&
+    categoryBudgetSum < totalBudget * 0.05; // category sum < 5% of total ⟹ USD-era mismatch
+
+  if (isStaleUSDData) {
+    // Regenerate immediately so the user never sees broken values
+    const fresh = generateDefaultBudget(
+      tripData.metadata.durationInDays,
+      tripData.metadata.travelStyle,
+      tripData.metadata.destination,
+      preferredCurrency
+    );
+    // Preserve existing manually-set totalBudget if it looks intentional
+    fresh.expenses = budgetData.expenses;
+    onUpdateTripData({ ...tripData, budgetData: fresh });
+    return null; // will re-render immediately with correct data
+  }
+
+  const currentCurrency = budgetData.currency || preferredCurrency;
 
   // ── Form States ──
   const [isEditingBudgets, setIsEditingBudgets] = useState(false);
+
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState<ExpenseItem['category']>('Food');
@@ -85,11 +125,12 @@ export default function BudgetTracker({ tripData, onUpdateTripData }: BudgetTrac
   });
 
   const totalSpent = Object.values(categoryTotals).reduce((a, b) => a + b, 0);
-  const totalBudget = budgetData.totalBudget;
-  const remaining = totalBudget - totalSpent;
-  const spentPercent = totalBudget > 0 ? Math.min((totalSpent / totalBudget) * 100, 100) : 0;
-  const isOverBudget = totalSpent > totalBudget;
-  const savingsPercent = totalBudget > 0 ? Math.round(((totalBudget - totalSpent) / totalBudget) * 100) : 0;
+  const remaining = budgetData.totalBudget - totalSpent;
+  const spentPercent = budgetData.totalBudget > 0 ? Math.min((totalSpent / budgetData.totalBudget) * 100, 100) : 0;
+
+  const isOverBudget = totalSpent > budgetData.totalBudget;
+  const savingsPercent = budgetData.totalBudget > 0 ? Math.round(((budgetData.totalBudget - totalSpent) / budgetData.totalBudget) * 100) : 0;
+
 
   // ── Filtered Expenses ──
   const filteredExpenses = useMemo(() => {
@@ -157,9 +198,22 @@ export default function BudgetTracker({ tripData, onUpdateTripData }: BudgetTrac
 
   const handleTotalBudgetChange = (val: string) => {
     const parsed = parseFloat(val) || 0;
+    const newTotal = Math.max(parsed, 0);
+
+    // Auto-redistribute category budgets proportionally based on travel style
+    const dist = DISTRIBUTIONS[tripData.metadata.travelStyle] || DISTRIBUTIONS.Default;
+    const newCategoryBudgets: Record<string, number> = {};
+    for (const [cat, ratio] of Object.entries(dist)) {
+      newCategoryBudgets[cat] = Math.round(newTotal * ratio);
+    }
+
     onUpdateTripData({
       ...tripData,
-      budgetData: { ...budgetData, totalBudget: Math.max(parsed, 0) }
+      budgetData: {
+        ...budgetData,
+        totalBudget: newTotal,
+        categoryBudgets: newCategoryBudgets
+      }
     });
   };
 
