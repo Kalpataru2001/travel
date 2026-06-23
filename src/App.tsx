@@ -60,7 +60,7 @@ function App() {
             if (!trip.budgetData) {
               trip.budgetData = generateDefaultBudget(
                 trip.metadata.durationInDays,
-                trip.metadata.travelStyle,
+                trip.metadata.travelStyles || [trip.metadata.travelStyle],
                 trip.metadata.destination,
                 localStorage.getItem('travel_user_preferred_currency') || 'INR'
               );
@@ -88,7 +88,7 @@ function App() {
           if (!trip.budgetData) {
             trip.budgetData = generateDefaultBudget(
               trip.metadata.durationInDays,
-              trip.metadata.travelStyle,
+              trip.metadata.travelStyles || [trip.metadata.travelStyle],
               trip.metadata.destination,
               localStorage.getItem('travel_user_preferred_currency') || 'INR'
             );
@@ -168,7 +168,7 @@ function App() {
       generatedTrip.id = `trip_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       generatedTrip.budgetData = generateDefaultBudget(
         generatedTrip.metadata.durationInDays,
-        generatedTrip.metadata.travelStyle,
+        generatedTrip.metadata.travelStyles || [generatedTrip.metadata.travelStyle],
         generatedTrip.metadata.destination,
         getPreferredCurrency()
       );
@@ -307,7 +307,7 @@ function App() {
     if (!trip.budgetData) {
       trip.budgetData = generateDefaultBudget(
         trip.metadata.durationInDays,
-        trip.metadata.travelStyle,
+        trip.metadata.travelStyles || [trip.metadata.travelStyle],
         trip.metadata.destination,
         localStorage.getItem('travel_user_preferred_currency') || 'INR'
       );

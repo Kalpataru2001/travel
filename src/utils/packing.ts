@@ -8,7 +8,7 @@ export function generateDefaultPackingList(
 ): PackingItem[] {
   const items: Omit<PackingItem, 'id'>[] = [];
   const duration = trip.metadata.durationInDays;
-  const style = trip.metadata.travelStyle;
+  const styles = trip.metadata.travelStyles || [trip.metadata.travelStyle];
 
   // 1. ESSENTIALS (Core Documents, Money, Health)
   items.push(
@@ -35,30 +35,34 @@ export function generateDefaultPackingList(
   );
 
   // Travel Style specific clothing
-  if (style === 'Adventure') {
+  if (styles.includes('Adventure')) {
     items.push(
       { item: '2x Active/Hiking Pants', category: 'Clothing', packed: false },
       { item: 'Light Windbreaker / Jacket', category: 'Clothing', packed: false },
       { item: 'Sturdy Hiking Boots / Trail Shoes', category: 'Clothing', packed: false }
     );
-  } else if (style === 'Relaxation') {
+  }
+  if (styles.includes('Relaxation')) {
     items.push(
       { item: '2x Swimwear & Cover-ups', category: 'Clothing', packed: false },
       { item: '2x Casual Shorts / Skirts', category: 'Clothing', packed: false },
       { item: 'Sandals / Flip-flops', category: 'Clothing', packed: false }
     );
-  } else if (style === 'Culture') {
+  }
+  if (styles.includes('Culture')) {
     items.push(
       { item: 'Conservative Clothes (Temple-appropriate)', category: 'Clothing', packed: false },
       { item: 'Lightweight Smart-Casual Pants/Dresses', category: 'Clothing', packed: false }
     );
-  } else if (style === 'Luxury') {
+  }
+  if (styles.includes('Luxury')) {
     items.push(
       { item: '1–2x Formal / Evening Wear Outfits', category: 'Clothing', packed: false },
       { item: 'Smart Casual Outfits (Dinner-ready)', category: 'Clothing', packed: false },
       { item: 'Premium Footwear / Dress Shoes', category: 'Clothing', packed: false }
     );
-  } else if (style === 'Budget') {
+  }
+  if (styles.includes('Budget')) {
     items.push(
       { item: 'Versatile Mix-and-match Pants (2)', category: 'Clothing', packed: false }
     );
@@ -74,7 +78,7 @@ export function generateDefaultPackingList(
   );
 
   // Style specific toiletries
-  if (style === 'Luxury') {
+  if (styles.includes('Luxury')) {
     items.push({ item: 'Premium Skincare / Cologne / Perfume', category: 'Toiletries', packed: false });
   }
 
@@ -86,31 +90,35 @@ export function generateDefaultPackingList(
   );
 
   // Travel style gear
-  if (style === 'Adventure') {
+  if (styles.includes('Adventure')) {
     items.push(
       { item: 'Insect Repellent Spray', category: 'Gear', packed: false },
       { item: 'Quick-dry Microfiber Towel', category: 'Gear', packed: false },
       { item: 'Headlamp / Small Flashlight', category: 'Gear', packed: false }
     );
-  } else if (style === 'Relaxation') {
+  }
+  if (styles.includes('Relaxation')) {
     items.push(
       { item: 'Polarized Sunglasses', category: 'Gear', packed: false },
       { item: 'Sunscreen (SPF 50+) & Lip Balm with SPF', category: 'Gear', packed: false },
       { item: 'Beach Towel & Sun Hat', category: 'Gear', packed: false }
     );
-  } else if (style === 'Budget') {
+  }
+  if (styles.includes('Budget')) {
     items.push(
       { item: 'Hostel Locker Padlock', category: 'Gear', packed: false },
       { item: 'Earplugs & Sleep Mask', category: 'Gear', packed: false },
       { item: 'Student / Youth Discount Card', category: 'Gear', packed: false }
     );
-  } else if (style === 'Culture') {
+  }
+  if (styles.includes('Culture')) {
     items.push(
       { item: 'Travel Camera / Extra Memory Card', category: 'Gear', packed: false },
       { item: 'Journal & Pen', category: 'Gear', packed: false },
       { item: 'Sunglasses & Sun Hat', category: 'Gear', packed: false }
     );
-  } else if (style === 'Luxury') {
+  }
+  if (styles.includes('Luxury')) {
     items.push(
       { item: 'Noise-canceling Headphones', category: 'Gear', packed: false },
       { item: 'Designer Sunglasses', category: 'Gear', packed: false }
@@ -153,8 +161,19 @@ export function generateDefaultPackingList(
     );
   }
 
+  // Deduplicate items list based on item name (lowercase check)
+  const uniqueItems: Omit<PackingItem, 'id'>[] = [];
+  const seenItems = new Set<string>();
+  for (const item of items) {
+    const itemKey = item.item.toLowerCase().trim();
+    if (!seenItems.has(itemKey)) {
+      seenItems.add(itemKey);
+      uniqueItems.push(item);
+    }
+  }
+
   // Map to add IDs
-  return items.map((item, index) => ({
+  return uniqueItems.map((item, index) => ({
     ...item,
     id: `pack-${index + 1}-${Math.floor(Math.random() * 100000)}`
   }));

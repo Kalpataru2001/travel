@@ -78,11 +78,19 @@ const RATES_FROM_USD: Record<string, number> = {
  */
 export function generateDefaultBudget(
   duration: number,
-  travelStyle: string,
+  travelStyles: string[] | string,
   destination: string,
   preferredCurrency = 'INR'
 ): BudgetData {
-  const baseDaily = BASE_DAILY_USD[travelStyle] || BASE_DAILY_USD.Default;
+  const styles = Array.isArray(travelStyles) ? travelStyles : [travelStyles];
+
+  // Calculate average base daily cost
+  let totalBaseDaily = 0;
+  styles.forEach((style) => {
+    totalBaseDaily += BASE_DAILY_USD[style] || BASE_DAILY_USD.Default;
+  });
+  const baseDaily = styles.length > 0 ? totalBaseDaily / styles.length : BASE_DAILY_USD.Default;
+
   const multiplier = getDestinationMultiplier(destination);
   const dailyCostUSD = baseDaily * multiplier;
 
@@ -91,10 +99,39 @@ export function generateDefaultBudget(
   const dailyCostLocal = dailyCostUSD * rate;
 
   const totalBudget = Math.round(duration * dailyCostLocal);
-  const dist = DISTRIBUTIONS[travelStyle] || DISTRIBUTIONS.Default;
+
+  // Merge category distributions by averaging them
+  const mergedDist: Record<string, number> = {
+    Accommodation: 0,
+    Transport: 0,
+    Food: 0,
+    Activities: 0,
+    Shopping: 0,
+    Others: 0,
+  };
+
+  styles.forEach((style) => {
+    const dist = DISTRIBUTIONS[style] || DISTRIBUTIONS.Default;
+    for (const [category, percent] of Object.entries(dist)) {
+      mergedDist[category] = (mergedDist[category] || 0) + percent;
+    }
+  });
+
+  // Average and normalize distributions so they sum to exactly 1.0
+  let sum = 0;
+  for (const category of Object.keys(mergedDist)) {
+    mergedDist[category] /= styles.length;
+    sum += mergedDist[category];
+  }
+
+  // Handle rounding/normalization to ensure exactly 100% total
+  if (sum > 0 && Math.abs(sum - 1.0) > 0.0001) {
+    const categories = Object.keys(mergedDist);
+    mergedDist[categories[0]] += (1.0 - sum);
+  }
 
   const categoryBudgets: Record<string, number> = {};
-  for (const [category, percent] of Object.entries(dist)) {
+  for (const [category, percent] of Object.entries(mergedDist)) {
     categoryBudgets[category] = Math.round(totalBudget * percent);
   }
 

@@ -28,7 +28,7 @@ Your task is to help the traveler get the most out of their custom itinerary for
 Trip Summary:
 - Destination: ${tripData.metadata.destination}
 - Duration: ${tripData.metadata.durationInDays} Days
-- Travel Style: ${tripData.metadata.travelStyle} Escape
+- Travel Style: ${(tripData.metadata.travelStyles || [tripData.metadata.travelStyle]).join(' & ')} Escape
 - Starting Point: ${tripData.metadata.startingPoint}
 - Recommended Base Stay Area: ${tripData.recommendedStayArea}
 

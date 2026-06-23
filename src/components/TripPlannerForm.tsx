@@ -24,17 +24,48 @@ export default function TripPlannerForm({ onSubmit }: FormProps) {
   const [duration, setDuration] = useState(
     () => Number(localStorage.getItem('last_duration')) || 3
   );
-  const [travelStyle, setTravelStyle] = useState<TripQuery['travelStyle']>(
-    () => (localStorage.getItem('last_style') as TripQuery['travelStyle']) || 'Adventure'
-  );
+  const [travelStyles, setTravelStyles] = useState<TripQuery['travelStyle'][]>(() => {
+    const cachedStyles = localStorage.getItem('last_styles');
+    if (cachedStyles) {
+      try {
+        return JSON.parse(cachedStyles);
+      } catch (e) {
+        // ignore
+      }
+    }
+    const legacyStyle = localStorage.getItem('last_style') as TripQuery['travelStyle'];
+    return legacyStyle ? [legacyStyle] : ['Adventure'];
+  });
+
+  const handleToggleStyle = (value: TripQuery['travelStyle']) => {
+    setTravelStyles((prev) => {
+      if (prev.includes(value)) {
+        if (prev.length <= 1) return prev; // min 1
+        return prev.filter((style) => style !== value);
+      } else {
+        if (prev.length >= 3) return prev; // max 3
+        return [...prev, value];
+      }
+    });
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     localStorage.setItem('last_start', startingPoint);
     localStorage.setItem('last_dest', destination);
     localStorage.setItem('last_duration', duration.toString());
-    localStorage.setItem('last_style', travelStyle);
-    onSubmit({ destination, durationInDays: duration, travelStyle, startingPoint });
+    localStorage.setItem('last_styles', JSON.stringify(travelStyles));
+    
+    const primaryStyle = travelStyles[0] || 'Adventure';
+    localStorage.setItem('last_style', primaryStyle);
+
+    onSubmit({
+      destination,
+      durationInDays: duration,
+      travelStyle: travelStyles.join(', ') as any,
+      travelStyles,
+      startingPoint,
+    });
   };
 
   return (
@@ -96,20 +127,38 @@ export default function TripPlannerForm({ onSubmit }: FormProps) {
 
         {/* Travel Style Cards */}
         <div>
-          <label className="form-label">🎨 Travel Vibe</label>
-          <div className="style-grid">
-            {TRAVEL_STYLES.map((style) => (
-              <button
-                key={style.value}
-                type="button"
-                className={`style-card ${travelStyle === style.value ? 'selected' : ''}`}
-                onClick={() => setTravelStyle(style.value)}
-              >
-                <span className="style-card-emoji">{style.emoji}</span>
-                <span>{style.label}</span>
-              </button>
-            ))}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+            <label className="form-label" style={{ margin: 0 }}>🎨 Travel Vibe</label>
+            <span style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.45)' }}>
+              Select 1 to 3 styles
+            </span>
           </div>
+          <div className="style-grid">
+            {TRAVEL_STYLES.map((style) => {
+              const isSelected = travelStyles.includes(style.value);
+              return (
+                <button
+                  key={style.value}
+                  type="button"
+                  className={`style-card ${isSelected ? 'selected' : ''}`}
+                  onClick={() => handleToggleStyle(style.value)}
+                >
+                  <span className="style-card-emoji">{style.emoji}</span>
+                  <span>{style.label}</span>
+                </button>
+              );
+            })}
+          </div>
+          {travelStyles.includes('Budget') && travelStyles.includes('Luxury') && (
+            <div className="vibe-tip-banner">
+              ✨ <strong>Flashpacker Blend!</strong> You selected Budget and Luxury. We will blend hostel/homestay ideas with premium dinner/activities.
+            </div>
+          )}
+          {travelStyles.length >= 3 && (
+            <div className="vibe-limit-banner">
+              🔒 Vibe limit reached (max 3 selected for focused itineraries).
+            </div>
+          )}
         </div>
 
         {/* Submit */}

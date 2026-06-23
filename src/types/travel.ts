@@ -4,6 +4,7 @@ export interface TripQuery {
   destination: string;
   durationInDays: number;
   travelStyle: 'Adventure' | 'Relaxation' | 'Budget' | 'Culture' | 'Luxury';
+  travelStyles?: ('Adventure' | 'Relaxation' | 'Budget' | 'Culture' | 'Luxury')[];
   startingPoint: string;
 }
 

@@ -12,16 +12,20 @@ export async function generateTravelItinerary(query: TripQuery): Promise<FullTri
     generationConfig: { responseMimeType: 'application/json' },
   });
 
-  const hotelTypeHint =
-    query.travelStyle === 'Budget'      ? 'budget guesthouses, hostels, and homestays' :
-    query.travelStyle === 'Luxury'      ? '5-star hotels, boutique resorts, and luxury properties' :
-    query.travelStyle === 'Adventure'   ? 'eco-lodges, campsites, and nature resorts' :
-    query.travelStyle === 'Culture'     ? 'heritage hotels, havelis, and locally-owned guesthouses' :
-    query.travelStyle === 'Relaxation'  ? 'spa resorts, beachside hotels, and wellness retreats' :
-    'well-rated hotels and guesthouses';
+  const styles = query.travelStyles || [query.travelStyle];
+  const hotelHints = styles.map((s) => {
+    if (s === 'Budget') return 'budget guesthouses, hostels, and homestays';
+    if (s === 'Luxury') return '5-star hotels, boutique resorts, and luxury properties';
+    if (s === 'Adventure') return 'eco-lodges, campsites, and nature resorts';
+    if (s === 'Culture') return 'heritage hotels, havelis, and locally-owned guesthouses';
+    if (s === 'Relaxation') return 'spa resorts, beachside hotels, and wellness retreats';
+    return 'well-rated hotels';
+  });
+  const hotelTypeHint = hotelHints.join(', or ');
+  const combinedVibeText = styles.join(' & ');
 
   const prompt = `
-    You are an expert travel guide. Create a highly realistic, logical ${query.durationInDays}-day itinerary for a ${query.travelStyle} style trip to ${query.destination}, starting from ${query.startingPoint}.
+    You are an expert travel guide. Create a highly realistic, logical ${query.durationInDays}-day itinerary for a trip to ${query.destination}, starting from ${query.startingPoint}, blending elements of ${combinedVibeText} travel vibes.
 
     You MUST return ONLY a valid JSON object matching this EXACT structure. Do NOT include markdown fences or any extra text.
 
@@ -31,6 +35,7 @@ export async function generateTravelItinerary(query: TripQuery): Promise<FullTri
         "destination": "${query.destination}",
         "durationInDays": ${query.durationInDays},
         "travelStyle": "${query.travelStyle}",
+        "travelStyles": ${JSON.stringify(styles)},
         "startingPoint": "${query.startingPoint}"
       },
       "recommendedStayArea": "Specific neighborhood or area to stay",
@@ -43,7 +48,7 @@ export async function generateTravelItinerary(query: TripQuery): Promise<FullTri
           "priceRange": "e.g. ₹800–1,200/night or $30–50/night",
           "rating": 4.3,
           "tags": ["Free WiFi", "Rooftop View", "Breakfast Included"],
-          "whyRecommended": "One sentence explaining why this suits a ${query.travelStyle} traveller",
+          "whyRecommended": "One sentence explaining why this suits a traveller looking for ${combinedVibeText} vibes",
           "imageKeyword": "descriptive photo keyword e.g. boutique hotel goa pool",
           "coordinates": { "lat": 15.2993, "lng": 74.1240 }
         }
@@ -80,7 +85,7 @@ export async function generateTravelItinerary(query: TripQuery): Promise<FullTri
     HOTEL RULES:
     1. Generate exactly 4 hotel recommendations — focus on ${hotelTypeHint}.
     2. All hotels must be real, existing properties in or near ${query.destination}.
-    3. Price range should be realistic for ${query.travelStyle} travel in this region (use local currency ₹ for India).
+    3. Price range should be realistic for ${combinedVibeText} travel in this region (use local currency ₹ for India).
     4. Rating must be between 3.5 and 5.0.
     5. Tags should be 2-4 relevant amenity tags per hotel.
     6. Hotel coordinates must be real locations in ${query.destination} on solid land.

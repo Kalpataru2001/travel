@@ -162,9 +162,14 @@ export default function SavedTrips({ onLoadTrip }: SavedTripsProps) {
                 <span className="trip-meta-pill">
                   📅 {trip.metadata.durationInDays} Days
                 </span>
-                <span className="trip-meta-pill">
-                  {STYLE_EMOJI[trip.metadata.travelStyle] || '✈️'} {trip.metadata.travelStyle}
-                </span>
+                {(trip.metadata.travelStyles || (trip.metadata.travelStyle ? trip.metadata.travelStyle.split(', ') : ['Adventure'])).map((style) => {
+                  const cleanStyle = style.trim();
+                  return (
+                    <span key={cleanStyle} className="trip-meta-pill">
+                      {STYLE_EMOJI[cleanStyle] || '✈️'} {cleanStyle}
+                    </span>
+                  );
+                })}
                 <span className="trip-meta-pill">
                   🛫 {trip.metadata.startingPoint}
                 </span>
