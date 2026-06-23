@@ -7,12 +7,23 @@ interface HotelRecommendationsProps {
   travelStyle: string;
 }
 
-const FALLBACK_IMG =
-  'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=600&q=80';
+const FALLBACK_IMG = 'https://picsum.photos/seed/hotel/600/400';
+
+function hashCode(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash |= 0;
+  }
+  return Math.abs(hash);
+}
 
 function getHotelImage(keyword: string): string {
-  return `https://source.unsplash.com/featured/600x400/?${encodeURIComponent(keyword)}`;
+  const seed = hashCode(keyword) % 1000;
+  return `https://picsum.photos/seed/${seed}/600/400`;
 }
+
 
 function StarRating({ rating }: { rating: number }) {
   const full = Math.floor(rating);

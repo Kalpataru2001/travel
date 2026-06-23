@@ -5,14 +5,26 @@ interface TimelineProps {
   tripData: FullTripItinerary;
 }
 
-// Uses Unsplash Source API for real keyword-based images
-function getActivityImage(keyword: string): string {
-  const encoded = encodeURIComponent(keyword);
-  return `https://source.unsplash.com/featured/600x400/?${encoded}`;
+// Generates a deterministic Picsum photo URL based on the keyword.
+// Picsum Photos (picsum.photos) is free and does not require an API key.
+// We derive a stable numeric seed from the string so the same activity
+// always shows the same image across page loads.
+function hashCode(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash |= 0; // Convert to 32-bit integer
+  }
+  return Math.abs(hash);
 }
 
-const FALLBACK_IMG =
-  'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=600&q=80';
+function getActivityImage(keyword: string): string {
+  const seed = hashCode(keyword) % 1000; // Picsum has ~1000 curated photos
+  return `https://picsum.photos/seed/${seed}/600/400`;
+}
+
+const FALLBACK_IMG = 'https://picsum.photos/seed/travel/600/400';
 
 export default function ItineraryTimeline({ tripData }: TimelineProps) {
   return (
