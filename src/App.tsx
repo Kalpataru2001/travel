@@ -11,9 +11,11 @@ import WeatherWidget from './components/WeatherWidget';
 import CurrencyConverter from './components/CurrencyConverter';
 import PackingList from './components/PackingList';
 import TravelAssistant from './components/TravelAssistant';
+import BudgetTracker from './components/BudgetTracker';
 import { generateTravelItinerary } from './utils/gemini';
 import type { FullTripItinerary } from './types/travel';
 import { syncOfflineTrips } from './utils/sync';
+import { generateDefaultBudget } from './utils/budget';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { collection, addDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore';
 import { auth, db, googleProvider } from './utils/firebase';
@@ -53,7 +55,15 @@ function App() {
           const querySnapshot = await getDocs(q);
           if (!querySnapshot.empty) {
             const docData = querySnapshot.docs[0].data();
-            setTripData(docData.tripData as FullTripItinerary);
+            const trip = docData.tripData as FullTripItinerary;
+            if (!trip.budgetData) {
+              trip.budgetData = generateDefaultBudget(
+                trip.metadata.durationInDays,
+                trip.metadata.travelStyle,
+                trip.metadata.destination
+              );
+            }
+            setTripData(trip);
             setIsSaved(true);
           } else {
             setSharedError("Shared trip not found. The link might be invalid or expired.");
@@ -72,7 +82,15 @@ function App() {
       const cachedSaved = localStorage.getItem('travel_active_trip_is_saved');
       if (cachedTrip) {
         try {
-          setTripData(JSON.parse(cachedTrip));
+          const trip = JSON.parse(cachedTrip);
+          if (!trip.budgetData) {
+            trip.budgetData = generateDefaultBudget(
+              trip.metadata.durationInDays,
+              trip.metadata.travelStyle,
+              trip.metadata.destination
+            );
+          }
+          setTripData(trip);
           if (cachedSaved) {
             setIsSaved(JSON.parse(cachedSaved));
           }
@@ -142,6 +160,11 @@ function App() {
     try {
       const generatedTrip = await generateTravelItinerary(query);
       generatedTrip.id = `trip_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      generatedTrip.budgetData = generateDefaultBudget(
+        generatedTrip.metadata.durationInDays,
+        generatedTrip.metadata.travelStyle,
+        generatedTrip.metadata.destination
+      );
       setTripData(generatedTrip);
     } catch (err) {
       setError("Oops! The AI got lost finding your route. Please try again.");
@@ -274,6 +297,13 @@ function App() {
   };
 
   const handleLoadSavedTrip = (trip: FullTripItinerary) => {
+    if (!trip.budgetData) {
+      trip.budgetData = generateDefaultBudget(
+        trip.metadata.durationInDays,
+        trip.metadata.travelStyle,
+        trip.metadata.destination
+      );
+    }
     setTripData(trip);
     setCurrentTemp(undefined);
     setCurrentCondition(undefined);
@@ -488,6 +518,12 @@ function App() {
                   </div>
 
                 </div>
+
+                {/* Budget & Expense Tracker — stacked below the grid */}
+                <BudgetTracker
+                  tripData={tripData}
+                  onUpdateTripData={setTripData}
+                />
 
                 {/* Hotel Recommendations — below the grid */}
                 {tripData.hotels && tripData.hotels.length > 0 && (

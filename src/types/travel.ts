@@ -61,4 +61,19 @@ export interface FullTripItinerary {
   hotels?: HotelRecommendation[];
   packingList?: PackingItem[];
   unsynced?: boolean;
+  budgetData?: BudgetData;
+}
+
+export interface ExpenseItem {
+  id: string;
+  amount: number;
+  category: 'Accommodation' | 'Transport' | 'Food' | 'Activities' | 'Shopping' | 'Others';
+  description: string;
+  dayNumber?: number;
+}
+
+export interface BudgetData {
+  totalBudget: number;
+  categoryBudgets: Record<string, number>;
+  expenses: ExpenseItem[];
 }
