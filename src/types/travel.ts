@@ -84,4 +84,5 @@ export interface BudgetData {
   totalBudget: number;
   categoryBudgets: Record<string, number>;
   expenses: ExpenseItem[];
+  currency?: string; // e.g. 'INR', 'USD', 'EUR'
 }

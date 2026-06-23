@@ -2,36 +2,95 @@
 import type { BudgetData } from '../types/travel';
 
 const DISTRIBUTIONS: Record<string, Record<string, number>> = {
-  Budget: { Accommodation: 0.35, Transport: 0.20, Food: 0.30, Activities: 0.10, Shopping: 0.05, Others: 0.00 },
-  Luxury: { Accommodation: 0.45, Transport: 0.15, Food: 0.20, Activities: 0.10, Shopping: 0.08, Others: 0.02 },
-  Adventure: { Accommodation: 0.30, Transport: 0.15, Food: 0.25, Activities: 0.25, Shopping: 0.03, Others: 0.02 },
+  Budget:     { Accommodation: 0.35, Transport: 0.20, Food: 0.30, Activities: 0.10, Shopping: 0.05, Others: 0.00 },
+  Luxury:     { Accommodation: 0.45, Transport: 0.15, Food: 0.20, Activities: 0.10, Shopping: 0.08, Others: 0.02 },
+  Adventure:  { Accommodation: 0.30, Transport: 0.15, Food: 0.25, Activities: 0.25, Shopping: 0.03, Others: 0.02 },
   Relaxation: { Accommodation: 0.45, Transport: 0.10, Food: 0.25, Activities: 0.15, Shopping: 0.03, Others: 0.02 },
-  Culture: { Accommodation: 0.35, Transport: 0.15, Food: 0.25, Activities: 0.20, Shopping: 0.03, Others: 0.02 },
-  Default: { Accommodation: 0.40, Transport: 0.15, Food: 0.25, Activities: 0.15, Shopping: 0.05, Others: 0.00 }
+  Culture:    { Accommodation: 0.35, Transport: 0.15, Food: 0.25, Activities: 0.20, Shopping: 0.03, Others: 0.02 },
+  Default:    { Accommodation: 0.40, Transport: 0.15, Food: 0.25, Activities: 0.15, Shopping: 0.05, Others: 0.00 }
 };
 
 /**
- * Generates an estimated initial budget breakdown based on duration and travel style.
+ * Base daily costs in USD, per travel style.
  */
-export function generateDefaultBudget(duration: number, travelStyle: string, destination: string): BudgetData {
-  // Base daily cost estimations
-  let dailyCost = 120;
-  
-  if (travelStyle === 'Budget') dailyCost = 50;
-  else if (travelStyle === 'Luxury') dailyCost = 500;
-  else if (travelStyle === 'Relaxation') dailyCost = 160;
-  else if (travelStyle === 'Adventure') dailyCost = 130;
-  else if (travelStyle === 'Culture') dailyCost = 100;
+const BASE_DAILY_USD: Record<string, number> = {
+  Budget:     50,
+  Luxury:     500,
+  Relaxation: 160,
+  Adventure:  130,
+  Culture:    100,
+  Default:    120,
+};
 
-  // Modify daily cost slightly based on destination tags if needed
-  const destLower = destination.toLowerCase();
-  if (destLower.includes('switzerland') || destLower.includes('japan') || destLower.includes('paris') || destLower.includes('london') || destLower.includes('new york') || destLower.includes('dubai')) {
-    dailyCost *= 1.3; // expensive destinations
-  } else if (destLower.includes('india') || destLower.includes('thailand') || destLower.includes('vietnam') || destLower.includes('indonesia') || destLower.includes('egypt')) {
-    dailyCost *= 0.7; // budget destinations
-  }
+/**
+ * Destination cost multipliers relative to global average.
+ */
+function getDestinationMultiplier(destination: string): number {
+  const d = destination.toLowerCase();
+  if (
+    d.includes('switzerland') || d.includes('japan') || d.includes('paris') ||
+    d.includes('london') || d.includes('new york') || d.includes('dubai') ||
+    d.includes('singapore') || d.includes('scandinavia') || d.includes('norway')
+  ) return 1.3;
+  if (
+    d.includes('india') || d.includes('thailand') || d.includes('vietnam') ||
+    d.includes('indonesia') || d.includes('egypt') || d.includes('nepal') ||
+    d.includes('cambodia') || d.includes('bali') || d.includes('goa') ||
+    d.includes('mumbai') || d.includes('delhi') || d.includes('bangalore') ||
+    d.includes('jaipur')
+  ) return 0.7;
+  return 1.0;
+}
 
-  const totalBudget = Math.round(duration * dailyCost);
+/**
+ * Fallback exchange rates relative to 1 USD.
+ * Imported from currency.ts indirectly to avoid circular deps.
+ */
+const RATES_FROM_USD: Record<string, number> = {
+  USD: 1.0,
+  EUR: 0.92,
+  GBP: 0.78,
+  INR: 83.5,
+  JPY: 155.0,
+  AUD: 1.50,
+  CAD: 1.36,
+  CHF: 0.90,
+  CNY: 7.25,
+  HKD: 7.80,
+  NZD: 1.63,
+  SGD: 1.35,
+  KRW: 1360.0,
+  THB: 36.5,
+  AED: 3.67,
+  ZAR: 18.20,
+  MXN: 17.50,
+  BRL: 5.15,
+  EGP: 47.50,
+  TRY: 32.20,
+  VND: 25400.0,
+  IDR: 16100.0,
+  MYR: 4.70,
+};
+
+/**
+ * Generates an estimated initial budget breakdown based on duration, travel style,
+ * destination, and user's preferred currency (defaulting to INR).
+ */
+export function generateDefaultBudget(
+  duration: number,
+  travelStyle: string,
+  destination: string,
+  preferredCurrency = 'INR'
+): BudgetData {
+  const baseDaily = BASE_DAILY_USD[travelStyle] || BASE_DAILY_USD.Default;
+  const multiplier = getDestinationMultiplier(destination);
+  const dailyCostUSD = baseDaily * multiplier;
+
+  // Convert from USD to preferred currency
+  const rate = RATES_FROM_USD[preferredCurrency] ?? RATES_FROM_USD.INR;
+  const dailyCostLocal = dailyCostUSD * rate;
+
+  const totalBudget = Math.round(duration * dailyCostLocal);
   const dist = DISTRIBUTIONS[travelStyle] || DISTRIBUTIONS.Default;
 
   const categoryBudgets: Record<string, number> = {};
@@ -42,6 +101,7 @@ export function generateDefaultBudget(duration: number, travelStyle: string, des
   return {
     totalBudget,
     categoryBudgets,
-    expenses: []
+    expenses: [],
+    currency: preferredCurrency,
   };
 }

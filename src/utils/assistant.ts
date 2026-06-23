@@ -1,6 +1,7 @@
 // src/utils/assistant.ts
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import type { FullTripItinerary } from '../types/travel';
+import { retryWithBackoff } from './retry';
 
 const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
 const genAI = new GoogleGenerativeAI(apiKey);
@@ -84,7 +85,7 @@ Instructions:
     history: sdkHistory,
   });
 
-  const result = await chat.sendMessage(newMessage);
+  const result = await retryWithBackoff(() => chat.sendMessage(newMessage));
   const response = await result.response;
   return response.text();
 }

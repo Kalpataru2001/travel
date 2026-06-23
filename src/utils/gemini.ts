@@ -1,6 +1,7 @@
 // src/utils/gemini.ts
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import type { TripQuery, FullTripItinerary } from '../types/travel';
+import { retryWithBackoff } from './retry';
 
 const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
 const genAI = new GoogleGenerativeAI(apiKey);
@@ -100,7 +101,7 @@ export async function generateTravelItinerary(query: TripQuery): Promise<FullTri
   `;
 
   try {
-    const result = await model.generateContent(prompt);
+    const result = await retryWithBackoff(() => model.generateContent(prompt));
     const responseText = result.response.text();
     return JSON.parse(responseText) as FullTripItinerary;
   } catch (error) {

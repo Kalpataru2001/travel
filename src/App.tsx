@@ -61,7 +61,8 @@ function App() {
               trip.budgetData = generateDefaultBudget(
                 trip.metadata.durationInDays,
                 trip.metadata.travelStyle,
-                trip.metadata.destination
+                trip.metadata.destination,
+                localStorage.getItem('travel_user_preferred_currency') || 'INR'
               );
             }
             setTripData(trip);
@@ -88,7 +89,8 @@ function App() {
             trip.budgetData = generateDefaultBudget(
               trip.metadata.durationInDays,
               trip.metadata.travelStyle,
-              trip.metadata.destination
+              trip.metadata.destination,
+              localStorage.getItem('travel_user_preferred_currency') || 'INR'
             );
           }
           setTripData(trip);
@@ -151,6 +153,9 @@ function App() {
     }
   };
 
+  const getPreferredCurrency = () =>
+    localStorage.getItem('travel_user_preferred_currency') || 'INR';
+
   const handleFormSubmit = async (query: any) => {
     setIsLoading(true);
     setError(null);
@@ -164,7 +169,8 @@ function App() {
       generatedTrip.budgetData = generateDefaultBudget(
         generatedTrip.metadata.durationInDays,
         generatedTrip.metadata.travelStyle,
-        generatedTrip.metadata.destination
+        generatedTrip.metadata.destination,
+        getPreferredCurrency()
       );
       setTripData(generatedTrip);
     } catch (err) {
@@ -302,7 +308,8 @@ function App() {
       trip.budgetData = generateDefaultBudget(
         trip.metadata.durationInDays,
         trip.metadata.travelStyle,
-        trip.metadata.destination
+        trip.metadata.destination,
+        localStorage.getItem('travel_user_preferred_currency') || 'INR'
       );
     }
     setTripData(trip);
