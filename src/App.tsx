@@ -12,6 +12,7 @@ import CurrencyConverter from './components/CurrencyConverter';
 import PackingList from './components/PackingList';
 import TravelAssistant from './components/TravelAssistant';
 import BudgetTracker from './components/BudgetTracker';
+import LanguagePhrasebook from './components/LanguagePhrasebook';
 import { generateTravelItinerary } from './utils/gemini';
 import type { FullTripItinerary } from './types/travel';
 import { syncOfflineTrips } from './utils/sync';
@@ -524,6 +525,9 @@ function App() {
                   tripData={tripData}
                   onUpdateTripData={setTripData}
                 />
+
+                {/* Local Phrasebook & Audio Pronunciation — stacked below budget */}
+                <LanguagePhrasebook tripData={tripData} />
 
                 {/* Hotel Recommendations — below the grid */}
                 {tripData.hotels && tripData.hotels.length > 0 && (

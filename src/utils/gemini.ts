@@ -65,6 +65,14 @@ export async function generateTravelItinerary(query: TripQuery): Promise<FullTri
             }
           ]
         }
+      ],
+      "localLanguageCode": "fr-FR",
+      "localPhrases": [
+        {
+          "english": "Hello / Welcome",
+          "translation": "Bonjour",
+          "phonetic": "bon-zhoor"
+        }
       ]
     }
 
@@ -85,6 +93,10 @@ export async function generateTravelItinerary(query: TripQuery): Promise<FullTri
     6. imageKeyword must be a vivid, specific phrase that describes the location visually for a photo search.
     7. Provide a localTip for every activity — make it practical and specific.
     8. The last activity on the last day should be departure preparation.
+
+    LANGUAGE RULES:
+    1. Set 'localLanguageCode' to the BCP-47 tag for the primary local language spoken at the destination (e.g. 'fr-FR' for France, 'ja-JP' for Japan, 'th-TH' for Thailand).
+    2. In 'localPhrases', translate exactly these 10 standard phrases: 'Hello / Welcome', 'Thank you', 'Please', 'Excuse me / Sorry', 'Yes', 'No', 'How much is this?', 'Where is the bathroom?', 'Do you speak English?', 'Delicious!'. Provide a phonetic pronunciation guide for each.
   `;
 
   try {

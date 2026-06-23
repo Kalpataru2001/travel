@@ -62,6 +62,14 @@ export interface FullTripItinerary {
   packingList?: PackingItem[];
   unsynced?: boolean;
   budgetData?: BudgetData;
+  localLanguageCode?: string;
+  localPhrases?: TravelPhrase[];
+}
+
+export interface TravelPhrase {
+  english: string;
+  translation: string;
+  phonetic: string;
 }
 
 export interface ExpenseItem {
