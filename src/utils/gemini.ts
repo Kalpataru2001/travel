@@ -67,7 +67,15 @@ export async function generateTravelItinerary(query: TripQuery): Promise<FullTri
               "transitTimeToNextStop": "15 mins by auto-rickshaw",
               "coordinates": { "lat": 14.5678, "lng": 74.3210 },
               "imageKeyword": "descriptive photography keyword e.g. Kudle Beach Gokarna sunset ocean",
-              "localTip": "A practical insider tip that most tourists miss"
+              "localTip": "A practical insider tip that most tourists miss",
+              "nearbyRestaurants": [
+                {
+                  "name": "Local Restaurant Name",
+                  "cuisine": "e.g. Seafood, Cafés, South Indian, Fine Dining",
+                  "priceRange": "e.g. ₹200–500/person",
+                  "whySpecial": "One sentence explaining why it is recommended (e.g. famous for crab curry, overlooks the bay) for ${combinedVibeText} travelers"
+                }
+              ]
             }
           ]
         }
@@ -99,6 +107,7 @@ export async function generateTravelItinerary(query: TripQuery): Promise<FullTri
     6. imageKeyword must be a vivid, specific phrase that describes the location visually for a photo search.
     7. Provide a localTip for every activity — make it practical and specific.
     8. The last activity on the last day should be departure preparation.
+    9. For every activity, generate exactly 2-3 nearby authentic restaurant suggestions matching the local vibe and budget of ${combinedVibeText} in a 'nearbyRestaurants' array. Always use ₹ for Indian destinations.
 
     LANGUAGE RULES:
     1. Set 'localLanguageCode' to the BCP-47 tag for the primary local language spoken at the destination (e.g. 'fr-FR' for France, 'ja-JP' for Japan, 'th-TH' for Thailand).

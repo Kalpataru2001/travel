@@ -8,6 +8,13 @@ export interface TripQuery {
   startingPoint: string;
 }
 
+export interface RestaurantSuggestion {
+  name: string;
+  cuisine: string;
+  priceRange: string;
+  whySpecial: string;
+}
+
 export interface Activity {
   id: string;
   timeOfDay: string; // Flexible — AI may return "Late Afternoon", "Evening", etc.
@@ -21,6 +28,7 @@ export interface Activity {
   };
   imageKeyword: string;
   localTip?: string;
+  nearbyRestaurants?: RestaurantSuggestion[];
 }
 
 export interface DayItinerary {

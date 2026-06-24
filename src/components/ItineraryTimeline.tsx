@@ -40,6 +40,14 @@ function ActivityImage({ activity }: { activity: Activity }) {
 
 export default function ItineraryTimeline({ tripData, onUpdateTripData }: TimelineProps) {
   const [activeDayNumber, setActiveDayNumber] = useState<number | 'all'>(1);
+  const [expandedFoodIds, setExpandedFoodIds] = useState<Record<string, boolean>>({});
+
+  const toggleFoodExpand = (id: string) => {
+    setExpandedFoodIds((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
 
   // Inline edit state
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -390,6 +398,57 @@ export default function ItineraryTimeline({ tripData, onUpdateTripData }: Timeli
                                 🚗 Next stop: {activity.transitTimeToNextStop}
                               </div>
                             )}
+
+                            {/* Eat Nearby Expandable Panel */}
+                            <div className="activity-restaurants-section">
+                              <button
+                                className={`activity-restaurants-toggle ${expandedFoodIds[activity.id] ? 'expanded' : ''}`}
+                                onClick={() => toggleFoodExpand(activity.id)}
+                              >
+                                <span className="toggle-title">🍽️ Eat Nearby</span>
+                                <span className="toggle-chevron">{expandedFoodIds[activity.id] ? '▲' : '▼'}</span>
+                              </button>
+                              
+                              {expandedFoodIds[activity.id] && (
+                                <div className="activity-restaurants-panel">
+                                  {activity.nearbyRestaurants && activity.nearbyRestaurants.length > 0 ? (
+                                    <div className="restaurants-list">
+                                      {activity.nearbyRestaurants.map((res, rIdx) => (
+                                        <div key={rIdx} className="restaurant-item-card">
+                                          <div className="restaurant-item-header">
+                                            <span className="restaurant-name">{res.name}</span>
+                                            <span className="restaurant-price-badge">{res.priceRange}</span>
+                                          </div>
+                                          <div className="restaurant-cuisine">🍳 {res.cuisine}</div>
+                                          <p className="restaurant-special">{res.whySpecial}</p>
+                                          <a
+                                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(res.name + ' ' + tripData.metadata.destination)}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="restaurant-maps-link"
+                                          >
+                                            🌐 Open in Maps
+                                          </a>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  ) : (
+                                    <div className="restaurant-empty-state">
+                                      <p>No food recommendations loaded for this stop.</p>
+                                      <button
+                                        className="ask-assistant-btn"
+                                        type="button"
+                                        onClick={() => {
+                                          alert("Ask our AI assistant GlobeGuide (in the bottom-right chat bubble) for restaurants near " + activity.activityName + "!");
+                                        }}
+                                      >
+                                        💬 Ask Assistant
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </>
                       )}
@@ -536,6 +595,57 @@ export default function ItineraryTimeline({ tripData, onUpdateTripData }: Timeli
                               🚗 Next stop: {activity.transitTimeToNextStop}
                             </div>
                           )}
+
+                          {/* Eat Nearby Expandable Panel */}
+                          <div className="activity-restaurants-section">
+                            <button
+                              className={`activity-restaurants-toggle ${expandedFoodIds[activity.id] ? 'expanded' : ''}`}
+                              onClick={() => toggleFoodExpand(activity.id)}
+                            >
+                              <span className="toggle-title">🍽️ Eat Nearby</span>
+                              <span className="toggle-chevron">{expandedFoodIds[activity.id] ? '▲' : '▼'}</span>
+                            </button>
+                            
+                            {expandedFoodIds[activity.id] && (
+                              <div className="activity-restaurants-panel">
+                                {activity.nearbyRestaurants && activity.nearbyRestaurants.length > 0 ? (
+                                  <div className="restaurants-list">
+                                    {activity.nearbyRestaurants.map((res, rIdx) => (
+                                      <div key={rIdx} className="restaurant-item-card">
+                                        <div className="restaurant-item-header">
+                                          <span className="restaurant-name">{res.name}</span>
+                                          <span className="restaurant-price-badge">{res.priceRange}</span>
+                                        </div>
+                                        <div className="restaurant-cuisine">🍳 {res.cuisine}</div>
+                                        <p className="restaurant-special">{res.whySpecial}</p>
+                                        <a
+                                          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(res.name + ' ' + tripData.metadata.destination)}`}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="restaurant-maps-link"
+                                        >
+                                          🌐 Open in Maps
+                                        </a>
+                                      </div>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <div className="restaurant-empty-state">
+                                    <p>No food recommendations loaded for this stop.</p>
+                                    <button
+                                      className="ask-assistant-btn"
+                                      type="button"
+                                      onClick={() => {
+                                        alert("Ask our AI assistant GlobeGuide (in the bottom-right chat bubble) for restaurants near " + activity.activityName + "!");
+                                      }}
+                                    >
+                                      💬 Ask Assistant
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
