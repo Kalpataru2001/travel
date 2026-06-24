@@ -1,5 +1,5 @@
 // src/components/ItineraryTimeline.tsx
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useDestinationImage } from '../hooks/useDestinationImage';
 import type { FullTripItinerary, Activity } from '../types/travel';
 
@@ -40,8 +40,6 @@ function ActivityImage({ activity }: { activity: Activity }) {
 
 export default function ItineraryTimeline({ tripData, onUpdateTripData }: TimelineProps) {
   const [activeDayNumber, setActiveDayNumber] = useState<number | 'all'>(1);
-  const [localActivities, setLocalActivities] = useState<Activity[]>([]);
-  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
   // Inline edit state
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -60,49 +58,6 @@ export default function ItineraryTimeline({ tripData, onUpdateTripData }: Timeli
   const [addDesc, setAddDesc] = useState('');
   const [addTip, setAddTip] = useState('');
   const [addTransit, setAddTransit] = useState('');
-
-  // Sync local activities when active day or tripData changes
-  useEffect(() => {
-    if (activeDayNumber !== 'all') {
-      const day = tripData.itinerary.find((d) => d.dayNumber === activeDayNumber);
-      setLocalActivities(day ? day.activities : []);
-    }
-  }, [tripData, activeDayNumber]);
-
-  // HTML5 Drag and Drop handlers
-  const handleDragStart = (e: React.DragEvent, index: number) => {
-    setDraggedIndex(index);
-    e.dataTransfer.effectAllowed = 'move';
-  };
-
-  const handleDragOver = (e: React.DragEvent, index: number) => {
-    e.preventDefault();
-    if (draggedIndex === null || draggedIndex === index) return;
-
-    // Swap locally for real-time visual response
-    const updated = [...localActivities];
-    const draggedItem = updated[draggedIndex];
-    updated.splice(draggedIndex, 1);
-    updated.splice(index, 0, draggedItem);
-    setDraggedIndex(index);
-    setLocalActivities(updated);
-  };
-
-  const handleDragEnd = () => {
-    setDraggedIndex(null);
-    if (activeDayNumber !== 'all') {
-      const updatedItinerary = tripData.itinerary.map((day) => {
-        if (day.dayNumber === activeDayNumber) {
-          return { ...day, activities: localActivities };
-        }
-        return day;
-      });
-      onUpdateTripData({
-        ...tripData,
-        itinerary: updatedItinerary,
-      });
-    }
-  };
 
   // Inline edit handlers
   const startEditing = (activity: Activity) => {
@@ -280,7 +235,7 @@ export default function ItineraryTimeline({ tripData, onUpdateTripData }: Timeli
             </div>
 
             {/* Empty State */}
-            {localActivities.length === 0 && (
+            {activeDay.activities.length === 0 && (
               <div className="empty-day-placeholder">
                 <div className="empty-day-icon">🏝️</div>
                 <p>No activities scheduled for this day yet.</p>
@@ -290,26 +245,19 @@ export default function ItineraryTimeline({ tripData, onUpdateTripData }: Timeli
 
             {/* Activities List */}
             <div className="activity-trail">
-              {localActivities.map((activity, index) => {
+              {activeDay.activities.map((activity, index) => {
                 const isEditing = editingId === activity.id;
 
                 return (
                   <div
                     key={activity.id}
-                    className={`activity-item ${draggedIndex === index ? 'is-dragging' : ''}`}
-                    draggable={!isEditing}
-                    onDragStart={(e) => handleDragStart(e, index)}
-                    onDragOver={(e) => handleDragOver(e, index)}
-                    onDragEnd={handleDragEnd}
+                    className="activity-item"
                   >
                     {/* Vertical connecting line */}
-                    {index !== localActivities.length - 1 && <div className="trail-line" />}
+                    {index !== activeDay.activities.length - 1 && <div className="trail-line" />}
 
-                    {/* Drag Handle Dot */}
-                    <div
-                      className={`trail-dot ${!isEditing ? 'drag-handle' : ''}`}
-                      title={!isEditing ? 'Drag to reorder' : ''}
-                    />
+                    {/* Timeline Dot Indicator */}
+                    <div className="trail-dot" />
 
                     {/* Activity Card */}
                     <div className="activity-card">
