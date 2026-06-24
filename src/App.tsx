@@ -558,7 +558,7 @@ function TripDashboard({
               <div className="map-dot" />
               <span className="timeline-panel-title">Day-by-Day Itinerary</span>
             </div>
-            <ItineraryTimeline tripData={tripData} />
+            <ItineraryTimeline tripData={tripData} onUpdateTripData={setTripData} />
           </div>
 
           {/* Right: Interactive Map — passes hotel markers too */}

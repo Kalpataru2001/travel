@@ -1,9 +1,11 @@
 // src/components/ItineraryTimeline.tsx
+import { useState, useEffect } from 'react';
 import { useDestinationImage } from '../hooks/useDestinationImage';
 import type { FullTripItinerary, Activity } from '../types/travel';
 
 interface TimelineProps {
   tripData: FullTripItinerary;
+  onUpdateTripData: (trip: FullTripItinerary) => void;
 }
 
 const FALLBACK_IMG = 'https://picsum.photos/seed/travel/600/400';
@@ -36,76 +38,571 @@ function ActivityImage({ activity }: { activity: Activity }) {
   );
 }
 
-export default function ItineraryTimeline({ tripData }: TimelineProps) {
+export default function ItineraryTimeline({ tripData, onUpdateTripData }: TimelineProps) {
+  const [activeDayNumber, setActiveDayNumber] = useState<number | 'all'>(1);
+  const [localActivities, setLocalActivities] = useState<Activity[]>([]);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+
+  // Inline edit state
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editTime, setEditTime] = useState('');
+  const [editDuration, setEditDuration] = useState('');
+  const [editDesc, setEditDesc] = useState('');
+  const [editTip, setEditTip] = useState('');
+  const [editTransit, setEditTransit] = useState('');
+
+  // Add custom activity state
+  const [isAdding, setIsAdding] = useState(false);
+  const [addName, setAddName] = useState('');
+  const [addTime, setAddTime] = useState('Morning');
+  const [addDuration, setAddDuration] = useState('1.5 hours');
+  const [addDesc, setAddDesc] = useState('');
+  const [addTip, setAddTip] = useState('');
+  const [addTransit, setAddTransit] = useState('');
+
+  // Sync local activities when active day or tripData changes
+  useEffect(() => {
+    if (activeDayNumber !== 'all') {
+      const day = tripData.itinerary.find((d) => d.dayNumber === activeDayNumber);
+      setLocalActivities(day ? day.activities : []);
+    }
+  }, [tripData, activeDayNumber]);
+
+  // HTML5 Drag and Drop handlers
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === index) return;
+
+    // Swap locally for real-time visual response
+    const updated = [...localActivities];
+    const draggedItem = updated[draggedIndex];
+    updated.splice(draggedIndex, 1);
+    updated.splice(index, 0, draggedItem);
+    setDraggedIndex(index);
+    setLocalActivities(updated);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
+    if (activeDayNumber !== 'all') {
+      const updatedItinerary = tripData.itinerary.map((day) => {
+        if (day.dayNumber === activeDayNumber) {
+          return { ...day, activities: localActivities };
+        }
+        return day;
+      });
+      onUpdateTripData({
+        ...tripData,
+        itinerary: updatedItinerary,
+      });
+    }
+  };
+
+  // Inline edit handlers
+  const startEditing = (activity: Activity) => {
+    setEditingId(activity.id);
+    setEditName(activity.activityName);
+    setEditTime(activity.timeOfDay);
+    setEditDuration(activity.estimatedDuration);
+    setEditDesc(activity.description);
+    setEditTip(activity.localTip || '');
+    setEditTransit(activity.transitTimeToNextStop || '');
+  };
+
+  const saveEdit = (actId: string) => {
+    if (!editName.trim()) return;
+
+    const updatedItinerary = tripData.itinerary.map((day) => {
+      if (day.dayNumber === activeDayNumber) {
+        return {
+          ...day,
+          activities: day.activities.map((act) => {
+            if (act.id === actId) {
+              return {
+                ...act,
+                activityName: editName,
+                timeOfDay: editTime,
+                estimatedDuration: editDuration,
+                description: editDesc,
+                localTip: editTip.trim() || undefined,
+                transitTimeToNextStop: editTransit.trim() || undefined,
+              };
+            }
+            return act;
+          }),
+        };
+      }
+      return day;
+    });
+
+    onUpdateTripData({
+      ...tripData,
+      itinerary: updatedItinerary,
+    });
+    setEditingId(null);
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+  };
+
+  // Activity deletion
+  const handleDeleteActivity = (actId: string) => {
+    if (!window.confirm('Are you sure you want to remove this activity?')) return;
+
+    const updatedItinerary = tripData.itinerary.map((day) => {
+      if (day.dayNumber === activeDayNumber) {
+        return {
+          ...day,
+          activities: day.activities.filter((act) => act.id !== actId),
+        };
+      }
+      return day;
+    });
+
+    onUpdateTripData({
+      ...tripData,
+      itinerary: updatedItinerary,
+    });
+
+    if (editingId === actId) {
+      setEditingId(null);
+    }
+  };
+
+  // Add custom activity
+  const handleAddActivitySubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!addName.trim()) return;
+
+    const activeDay = tripData.itinerary.find((d) => d.dayNumber === activeDayNumber);
+    if (!activeDay) return;
+
+    // Coordinate calculation: copy last activity or fallback to city defaults
+    let lat = 12.9716;
+    let lng = 77.5946;
+    if (activeDay.activities.length > 0) {
+      const lastAct = activeDay.activities[activeDay.activities.length - 1];
+      lat = lastAct.coordinates.lat + 0.005 * (Math.random() - 0.5); // slight offset so markers don't overlap exactly
+      lng = lastAct.coordinates.lng + 0.005 * (Math.random() - 0.5);
+    } else {
+      const firstVal = tripData.itinerary.flatMap((d) => d.activities).find((a) => a.coordinates?.lat);
+      if (firstVal) {
+        lat = firstVal.coordinates.lat + 0.005;
+        lng = firstVal.coordinates.lng + 0.005;
+      }
+    }
+
+    const newActivity: Activity = {
+      id: `act_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+      activityName: addName,
+      timeOfDay: addTime,
+      estimatedDuration: addDuration,
+      description: addDesc,
+      localTip: addTip.trim() || undefined,
+      transitTimeToNextStop: addTransit.trim() || undefined,
+      coordinates: { lat, lng },
+      imageKeyword: addName,
+    };
+
+    const updatedItinerary = tripData.itinerary.map((day) => {
+      if (day.dayNumber === activeDayNumber) {
+        return {
+          ...day,
+          activities: [...day.activities, newActivity],
+        };
+      }
+      return day;
+    });
+
+    onUpdateTripData({
+      ...tripData,
+      itinerary: updatedItinerary,
+    });
+
+    // Reset Form
+    setAddName('');
+    setAddTime('Morning');
+    setAddDuration('1.5 hours');
+    setAddDesc('');
+    setAddTip('');
+    setAddTransit('');
+    setIsAdding(false);
+  };
+
+  const activeDay = activeDayNumber === 'all'
+    ? null
+    : tripData.itinerary.find((d) => d.dayNumber === activeDayNumber);
+
   return (
-    <div className="timeline-scroll">
-      {tripData.itinerary.map((day) => (
-        <div key={day.dayNumber} className="day-group">
+    <div className="timeline-container">
+      {/* Day Selector Tabs */}
+      <div className="day-tabs-container no-print">
+        <button
+          className={`day-tab-btn ${activeDayNumber === 'all' ? 'active' : ''}`}
+          onClick={() => {
+            setActiveDayNumber('all');
+            setIsAdding(false);
+            setEditingId(null);
+          }}
+        >
+          Show All Days
+        </button>
+        {tripData.itinerary.map((day) => (
+          <button
+            key={day.dayNumber}
+            className={`day-tab-btn ${activeDayNumber === day.dayNumber ? 'active' : ''}`}
+            onClick={() => {
+              setActiveDayNumber(day.dayNumber);
+              setIsAdding(false);
+              setEditingId(null);
+            }}
+          >
+            Day {day.dayNumber}
+          </button>
+        ))}
+      </div>
 
-          {/* Day Header */}
-          <div className="day-header">
-            <div className="day-badge">Day {day.dayNumber}</div>
-            <h3 className="day-theme">{day.theme}</h3>
-          </div>
+      <div className="timeline-scroll">
+        {/* Render Single Active Day */}
+        {activeDayNumber !== 'all' && activeDay && (
+          <div className="day-group">
+            {/* Day Header */}
+            <div className="day-header planner-day-header">
+              <div className="day-badge">Day {activeDay.dayNumber}</div>
+              <h3 className="day-theme">{activeDay.theme}</h3>
+            </div>
 
-          {/* Activity Trail */}
-          <div className="activity-trail">
-            {day.activities.map((activity, index) => (
-              <div key={activity.id} className="activity-item">
+            {/* Empty State */}
+            {localActivities.length === 0 && (
+              <div className="empty-day-placeholder">
+                <div className="empty-day-icon">🏝️</div>
+                <p>No activities scheduled for this day yet.</p>
+                <p className="empty-day-sub">Use the card below to add custom stops!</p>
+              </div>
+            )}
 
-                {/* Vertical connecting line (not on last item) */}
-                {index !== day.activities.length - 1 && (
-                  <div className="trail-line" />
-                )}
+            {/* Activities List */}
+            <div className="activity-trail">
+              {localActivities.map((activity, index) => {
+                const isEditing = editingId === activity.id;
 
-                {/* Dot marker */}
-                <div className="trail-dot" />
+                return (
+                  <div
+                    key={activity.id}
+                    className={`activity-item ${draggedIndex === index ? 'is-dragging' : ''}`}
+                    draggable={!isEditing}
+                    onDragStart={(e) => handleDragStart(e, index)}
+                    onDragOver={(e) => handleDragOver(e, index)}
+                    onDragEnd={handleDragEnd}
+                  >
+                    {/* Vertical connecting line */}
+                    {index !== localActivities.length - 1 && <div className="trail-line" />}
 
-                {/* Activity Card */}
-                <div className="activity-card">
+                    {/* Drag Handle Dot */}
+                    <div
+                      className={`trail-dot ${!isEditing ? 'drag-handle' : ''}`}
+                      title={!isEditing ? 'Drag to reorder' : ''}
+                    />
 
-                  {/* Photo Header — async smart image */}
-                  <ActivityImage activity={activity} />
+                    {/* Activity Card */}
+                    <div className="activity-card">
+                      {isEditing ? (
+                        /* Inline Editing Form */
+                        <div className="activity-edit-form">
+                          <h4 className="edit-form-title">Edit Activity Details</h4>
+                          
+                          <div className="edit-form-row">
+                            <div className="edit-form-field">
+                              <label>Activity Title</label>
+                              <input
+                                type="text"
+                                value={editName}
+                                onChange={(e) => setEditName(e.target.value)}
+                                placeholder="e.g. Visit the Beach"
+                                className="edit-input"
+                              />
+                            </div>
+                            <div className="edit-form-field">
+                              <label>Time of Day</label>
+                              <input
+                                type="text"
+                                value={editTime}
+                                onChange={(e) => setEditTime(e.target.value)}
+                                placeholder="e.g. Morning, 10:00 AM"
+                                className="edit-input"
+                              />
+                            </div>
+                          </div>
 
-                  {/* Card Body */}
-                  <div className="activity-body">
-                    <div className="activity-meta">
-                      <span className="activity-time">{activity.timeOfDay}</span>
-                      <span className="activity-duration">
-                        ⏱ {activity.estimatedDuration}
-                      </span>
+                          <div className="edit-form-row">
+                            <div className="edit-form-field">
+                              <label>Estimated Duration</label>
+                              <input
+                                type="text"
+                                value={editDuration}
+                                onChange={(e) => setEditDuration(e.target.value)}
+                                placeholder="e.g. 2 hours"
+                                className="edit-input"
+                              />
+                            </div>
+                            <div className="edit-form-field">
+                              <label>Transit to Next Stop</label>
+                              <input
+                                type="text"
+                                value={editTransit}
+                                onChange={(e) => setEditTransit(e.target.value)}
+                                placeholder="e.g. 15 mins taxi, walking"
+                                className="edit-input"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="edit-form-field">
+                            <label>Description</label>
+                            <textarea
+                              value={editDesc}
+                              onChange={(e) => setEditDesc(e.target.value)}
+                              placeholder="Describe what you will do..."
+                              rows={3}
+                              className="edit-textarea"
+                            />
+                          </div>
+
+                          <div className="edit-form-field">
+                            <label>💡 Local Tip (Optional)</label>
+                            <input
+                              type="text"
+                              value={editTip}
+                              onChange={(e) => setEditTip(e.target.value)}
+                              placeholder="e.g. Visit early to avoid crowds"
+                              className="edit-input"
+                            />
+                          </div>
+
+                          <div className="edit-form-actions">
+                            <button className="edit-btn-save" onClick={() => saveEdit(activity.id)}>
+                              Save
+                            </button>
+                            <button className="edit-btn-cancel" onClick={cancelEdit}>
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        /* Normal Activity Card Rendering */
+                        <>
+                          {/* Image */}
+                          <ActivityImage activity={activity} />
+
+                          {/* Body */}
+                          <div className="activity-body">
+                            {/* Card Control Actions (Edit & Delete buttons visible on hover) */}
+                            <div className="activity-actions-overlay no-print">
+                              <button
+                                className="act-action-btn edit-btn"
+                                onClick={() => startEditing(activity)}
+                                title="Edit activity"
+                              >
+                                ✏️
+                              </button>
+                              <button
+                                className="act-action-btn delete-btn"
+                                onClick={() => handleDeleteActivity(activity.id)}
+                                title="Delete activity"
+                              >
+                                🗑️
+                              </button>
+                            </div>
+
+                            <div className="activity-meta">
+                              <span className="activity-time">{activity.timeOfDay}</span>
+                              <span className="activity-duration">⏱ {activity.estimatedDuration}</span>
+                            </div>
+
+                            <h4 className="activity-name">{activity.activityName}</h4>
+                            <p className="activity-desc">{activity.description}</p>
+
+                            {/* Local Tip */}
+                            {activity.localTip && (
+                              <div className="activity-tip">
+                                💡 <span>{activity.localTip}</span>
+                              </div>
+                            )}
+
+                            {/* Transit details */}
+                            {activity.transitTimeToNextStop && (
+                              <div className="activity-transit" style={{ marginTop: activity.localTip ? '8px' : '0' }}>
+                                🚗 Next stop: {activity.transitTimeToNextStop}
+                              </div>
+                            )}
+                          </div>
+                        </>
+                      )}
                     </div>
-
-                    <h4 className="activity-name">{activity.activityName}</h4>
-                    <p className="activity-desc">{activity.description}</p>
-
-                    {/* Local Tip */}
-                    {activity.localTip && (
-                      <div className="activity-tip">
-                        💡 <span>{activity.localTip}</span>
-                      </div>
-                    )}
-
-                    {/* Transit to next stop */}
-                    {activity.transitTimeToNextStop && (
-                      <div className="activity-transit" style={{ marginTop: activity.localTip ? '8px' : '0' }}>
-                        🚗 Next stop: {activity.transitTimeToNextStop}
-                      </div>
-                    )}
                   </div>
+                );
+              })}
+            </div>
+
+            {/* "+ Add Custom Stop" Collapsible Card */}
+            <div className="add-activity-wrapper no-print">
+              {!isAdding ? (
+                <button className="add-activity-toggle-btn" onClick={() => setIsAdding(true)}>
+                  ➕ Add Custom Stop
+                </button>
+              ) : (
+                <form onSubmit={handleAddActivitySubmit} className="add-activity-form">
+                  <h4 className="add-form-title">🆕 Add Custom Stop</h4>
+                  
+                  <div className="edit-form-row">
+                    <div className="edit-form-field">
+                      <label>Activity Title *</label>
+                      <input
+                        type="text"
+                        value={addName}
+                        onChange={(e) => setAddName(e.target.value)}
+                        placeholder="e.g. Watch Sunset at Viewpoint"
+                        required
+                        className="edit-input"
+                      />
+                    </div>
+                    <div className="edit-form-field">
+                      <label>Time of Day</label>
+                      <input
+                        type="text"
+                        value={addTime}
+                        onChange={(e) => setAddTime(e.target.value)}
+                        placeholder="e.g. Morning, 3:00 PM"
+                        className="edit-input"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="edit-form-row">
+                    <div className="edit-form-field">
+                      <label>Estimated Duration</label>
+                      <input
+                        type="text"
+                        value={addDuration}
+                        onChange={(e) => setAddDuration(e.target.value)}
+                        placeholder="e.g. 1.5 hours"
+                        className="edit-input"
+                      />
+                    </div>
+                    <div className="edit-form-field">
+                      <label>Transit to Next Stop</label>
+                      <input
+                        type="text"
+                        value={addTransit}
+                        onChange={(e) => setAddTransit(e.target.value)}
+                        placeholder="e.g. 10 mins walk"
+                        className="edit-input"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="edit-form-field">
+                    <label>Description</label>
+                    <textarea
+                      value={addDesc}
+                      onChange={(e) => setAddDesc(e.target.value)}
+                      placeholder="What will you do here?"
+                      rows={3}
+                      className="edit-textarea"
+                    />
+                  </div>
+
+                  <div className="edit-form-field">
+                    <label>💡 Local Tip (Optional)</label>
+                    <input
+                      type="text"
+                      value={addTip}
+                      onChange={(e) => setAddTip(e.target.value)}
+                      placeholder="e.g. Buy tickets online in advance"
+                      className="edit-input"
+                    />
+                  </div>
+
+                  <p className="add-coordinates-hint">
+                    📍 Note: Location snaps to current day itinerary coordinate path.
+                  </p>
+
+                  <div className="edit-form-actions">
+                    <button type="submit" className="edit-btn-save">
+                      Add Stop
+                    </button>
+                    <button type="button" className="edit-btn-cancel" onClick={() => setIsAdding(false)}>
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Render Show All Days View */}
+        {activeDayNumber === 'all' && (
+          <div className="all-days-trail">
+            {tripData.itinerary.map((day) => (
+              <div key={day.dayNumber} className="day-group">
+                {/* Day Header */}
+                <div className="day-header">
+                  <div className="day-badge">Day {day.dayNumber}</div>
+                  <h3 className="day-theme">{day.theme}</h3>
+                </div>
+
+                {/* Day Activities (Static / print-friendly) */}
+                <div className="activity-trail">
+                  {day.activities.map((activity, index) => (
+                    <div key={activity.id} className="activity-item">
+                      {index !== day.activities.length - 1 && <div className="trail-line" />}
+                      <div className="trail-dot" />
+
+                      <div className="activity-card">
+                        <ActivityImage activity={activity} />
+                        <div className="activity-body">
+                          <div className="activity-meta">
+                            <span className="activity-time">{activity.timeOfDay}</span>
+                            <span className="activity-duration">⏱ {activity.estimatedDuration}</span>
+                          </div>
+
+                          <h4 className="activity-name">{activity.activityName}</h4>
+                          <p className="activity-desc">{activity.description}</p>
+
+                          {activity.localTip && (
+                            <div className="activity-tip">
+                              💡 <span>{activity.localTip}</span>
+                            </div>
+                          )}
+
+                          {activity.transitTimeToNextStop && (
+                            <div className="activity-transit" style={{ marginTop: activity.localTip ? '8px' : '0' }}>
+                              🚗 Next stop: {activity.transitTimeToNextStop}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             ))}
           </div>
-        </div>
-      ))}
+        )}
 
-      {/* Local Transport Advice Box */}
-      <div className="local-tip-box">
-        <div className="local-tip-title">
-          💡 Local Expert Tip
+        {/* Local Transport Advice Box */}
+        <div className="local-tip-box">
+          <div className="local-tip-title">💡 Local Expert Tip</div>
+          <p className="local-tip-text">{tripData.localTransportAdvice}</p>
         </div>
-        <p className="local-tip-text">{tripData.localTransportAdvice}</p>
       </div>
     </div>
   );
