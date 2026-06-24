@@ -21,6 +21,7 @@ import { useAuthState } from 'react-firebase-hooks/auth';
 import { collection, addDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore';
 import { auth, db, googleProvider } from './utils/firebase';
 import { signInWithPopup } from 'firebase/auth';
+import { useDestinationImage } from './hooks/useDestinationImage';
 
 function App() {
   const [tripData, setTripData] = useState<FullTripItinerary | null>(null);
@@ -419,30 +420,88 @@ function App() {
 
             {/* 3. Dashboard — trip loaded */}
             {tripData && !isLoading && !isSharedLoading && (
-              <div style={{ animation: 'fadeIn 0.5s ease' }}>
+              <TripDashboard
+                tripData={tripData}
+                syncMessage={syncMessage}
+                isSharedView={isSharedView}
+                currentTemp={currentTemp}
+                currentCondition={currentCondition}
+                setCurrentTemp={setCurrentTemp}
+                setCurrentCondition={setCurrentCondition}
+                setTripData={setTripData}
+                handleBackToPlanner={handleBackToPlanner}
+              />
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
 
-                {/* Sync Alert Banner */}
-                {syncMessage && (
-                  <div className="sync-alert-banner">
-                    <span className="sync-banner-icon">✨</span>
-                    <span>{syncMessage}</span>
-                  </div>
-                )}
+// ─────────────────────────────────────────────────────────────────
+// TripDashboard — pulled out to use hooks at proper component level
+// ─────────────────────────────────────────────────────────────────
+function TripDashboard({
+  tripData,
+  syncMessage,
+  isSharedView,
+  currentTemp,
+  currentCondition,
+  setCurrentTemp,
+  setCurrentCondition,
+  setTripData,
+  handleBackToPlanner,
+}: {
+  tripData: FullTripItinerary;
+  syncMessage: string;
+  isSharedView: boolean;
+  currentTemp: number | undefined;
+  currentCondition: string | undefined;
+  setCurrentTemp: (t: number | undefined) => void;
+  setCurrentCondition: (c: string | undefined) => void;
+  setTripData: (t: FullTripItinerary) => void;
+  handleBackToPlanner: () => void;
+}) {
+  // Resolve a real hero image for the destination
+  const { src: heroBg } = useDestinationImage(
+    `${tripData.metadata.destination} landmark skyline`,
+    1600,
+    900
+  );
 
-                {/* Shared View Banner */}
-                {isSharedView && (
-                  <div className="shared-trip-banner">
-                    <span className="shared-banner-icon">🌍</span>
-                    <span className="shared-banner-text">
-                      You are viewing a shared travel preview. Click <strong>"Save to My Trips"</strong> in the top bar to save a copy to your account!
-                    </span>
-                  </div>
-                )}
+  return (
+    <div style={{ animation: 'fadeIn 0.5s ease' }}>
 
-                {/* Hero Trip Header */}
-                <div className="trip-header">
-                  <div className="trip-header-bg" />
-                  <div className="trip-header-overlay" />
+      {/* Sync Alert Banner */}
+      {syncMessage && (
+        <div className="sync-alert-banner">
+          <span className="sync-banner-icon">✨</span>
+          <span>{syncMessage}</span>
+        </div>
+      )}
+
+      {/* Shared View Banner */}
+      {isSharedView && (
+        <div className="shared-trip-banner">
+          <span className="shared-banner-icon">🌍</span>
+          <span className="shared-banner-text">
+            You are viewing a shared travel preview. Click <strong>"Save to My Trips"</strong> in the top bar to save a copy to your account!
+          </span>
+        </div>
+      )}
+
+      {/* Hero Trip Header — with real destination photo */}
+      <div className="trip-header">
+        <div
+          className="trip-header-bg"
+          style={{
+            backgroundImage: `url('${heroBg}')`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }}
+        />
+        <div className="trip-header-overlay" />
 
                   {/* Top-left Back button — inside header, not fighting navbar */}
                   <div className="trip-header-actions">
@@ -476,91 +535,86 @@ function App() {
                       )}
                     </div>
                   </div>
-                </div>
+        </div>
 
-                {/* Widgets Grid: Weather & Currency */}
-                <div className="widgets-grid no-print">
-                  <WeatherWidget
-                    destination={tripData.metadata.destination}
-                    onWeatherLoaded={(temp, cond) => {
-                      setCurrentTemp(temp);
-                      setCurrentCondition(cond);
-                    }}
-                  />
-                  <CurrencyConverter destination={tripData.metadata.destination} />
-                </div>
+        {/* Widgets Grid: Weather & Currency */}
+        <div className="widgets-grid no-print">
+          <WeatherWidget
+            destination={tripData.metadata.destination}
+            onWeatherLoaded={(temp, cond) => {
+              setCurrentTemp(temp);
+              setCurrentCondition(cond);
+            }}
+          />
+          <CurrencyConverter destination={tripData.metadata.destination} />
+        </div>
 
-                {/* Dashboard Grid */}
-                <div className="dashboard-grid">
+        {/* Dashboard Grid */}
+        <div className="dashboard-grid">
 
-                  {/* Left: Itinerary Timeline */}
-                  <div className="timeline-panel">
-                    <div className="timeline-panel-header">
-                      <div className="map-dot" />
-                      <span className="timeline-panel-title">Day-by-Day Itinerary</span>
-                    </div>
-                    <ItineraryTimeline tripData={tripData} />
-                  </div>
+          {/* Left: Itinerary Timeline */}
+          <div className="timeline-panel">
+            <div className="timeline-panel-header">
+              <div className="map-dot" />
+              <span className="timeline-panel-title">Day-by-Day Itinerary</span>
+            </div>
+            <ItineraryTimeline tripData={tripData} />
+          </div>
 
-                  {/* Right: Interactive Map — passes hotel markers too */}
-                  <div className="map-panel">
-                    <div className="map-panel-header">
-                      <div className="map-dot" />
-                      <span className="map-panel-title">Interactive Route Map</span>
-                      {tripData.hotels && tripData.hotels.length > 0 && (
-                        <span style={{
-                          marginLeft: 'auto',
-                          fontSize: '0.72rem',
-                          color: '#f59e0b',
-                          fontWeight: 600,
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '4px'
-                        }}>
-                          <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#f59e0b', display: 'inline-block' }} />
-                          Hotels
-                        </span>
-                      )}
-                    </div>
-                    <TravelMap tripData={tripData} hotels={tripData.hotels} />
-                  </div>
+          {/* Right: Interactive Map — passes hotel markers too */}
+          <div className="map-panel">
+            <div className="map-panel-header">
+              <div className="map-dot" />
+              <span className="map-panel-title">Interactive Route Map</span>
+              {tripData.hotels && tripData.hotels.length > 0 && (
+                <span style={{
+                  marginLeft: 'auto',
+                  fontSize: '0.72rem',
+                  color: '#f59e0b',
+                  fontWeight: 600,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}>
+                  <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#f59e0b', display: 'inline-block' }} />
+                  Hotels
+                </span>
+              )}
+            </div>
+            <TravelMap tripData={tripData} hotels={tripData.hotels} />
+          </div>
 
-                </div>
+        </div>
 
-                {/* Budget & Expense Tracker — stacked below the grid */}
-                <BudgetTracker
-                  tripData={tripData}
-                  onUpdateTripData={setTripData}
-                />
+        {/* Budget & Expense Tracker */}
+        <BudgetTracker
+          tripData={tripData}
+          onUpdateTripData={setTripData}
+        />
 
-                {/* Local Phrasebook & Audio Pronunciation — stacked below budget */}
-                <LanguagePhrasebook tripData={tripData} />
+        {/* Local Phrasebook & Audio Pronunciation */}
+        <LanguagePhrasebook tripData={tripData} />
 
-                {/* Hotel Recommendations — below the grid */}
-                {tripData.hotels && tripData.hotels.length > 0 && (
-                  <HotelRecommendations
-                    hotels={tripData.hotels}
-                    destination={tripData.metadata.destination}
-                    travelStyle={tripData.metadata.travelStyle}
-                  />
-                )}
-
-                {/* Packing Checklist — stacked below hotels */}
-                <PackingList
-                  tripData={tripData}
-                  onUpdateTripData={setTripData}
-                  currentTemp={currentTemp}
-                  currentCondition={currentCondition}
-                />
-
-                {/* AI Travel Assistant floating trigger & side panel */}
-                <TravelAssistant tripData={tripData} />
-              </div>
-            )}
-          </>
+        {/* Hotel Recommendations */}
+        {tripData.hotels && tripData.hotels.length > 0 && (
+          <HotelRecommendations
+            hotels={tripData.hotels}
+            destination={tripData.metadata.destination}
+            travelStyle={tripData.metadata.travelStyle}
+          />
         )}
+
+        {/* Packing Checklist */}
+        <PackingList
+          tripData={tripData}
+          onUpdateTripData={setTripData}
+          currentTemp={currentTemp}
+          currentCondition={currentCondition}
+        />
+
+        {/* AI Travel Assistant */}
+        <TravelAssistant tripData={tripData} />
       </div>
-    </div>
   );
 }
 

@@ -1,4 +1,5 @@
 // src/components/HotelRecommendations.tsx
+import { useDestinationImage } from '../hooks/useDestinationImage';
 import type { HotelRecommendation } from '../types/travel';
 
 interface HotelRecommendationsProps {
@@ -8,22 +9,6 @@ interface HotelRecommendationsProps {
 }
 
 const FALLBACK_IMG = 'https://picsum.photos/seed/hotel/600/400';
-
-function hashCode(str: string): number {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
-    hash |= 0;
-  }
-  return Math.abs(hash);
-}
-
-function getHotelImage(keyword: string): string {
-  const seed = hashCode(keyword) % 1000;
-  return `https://picsum.photos/seed/${seed}/600/400`;
-}
-
 
 function StarRating({ rating }: { rating: number }) {
   const full = Math.floor(rating);
@@ -53,6 +38,37 @@ const STYLE_ICON: Record<string, string> = {
   Luxury: '👑',
   Budget: '🎒',
 };
+
+// Individual hotel image component with async real photo resolution
+function HotelImage({ hotel }: { hotel: HotelRecommendation }) {
+  const { src, isLoading, isReal } = useDestinationImage(
+    `${hotel.name} ${hotel.area} hotel`,
+    600,
+    400
+  );
+
+  return (
+    <div className="hotel-card-img-wrapper">
+      <img
+        src={src}
+        alt={hotel.name}
+        className={`hotel-card-img ${isLoading ? 'img-resolving' : ''}`}
+        loading="lazy"
+        onError={(e) => {
+          (e.target as HTMLImageElement).src = FALLBACK_IMG;
+        }}
+      />
+      {/* Price Badge overlaid on image */}
+      <div className="hotel-price-badge">{hotel.priceRange}</div>
+      {/* Real photo badge */}
+      {isReal && (
+        <div className="real-photo-badge hotel-photo-badge" title="Real hotel photo">
+          📸
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function HotelRecommendations({
   hotels,
@@ -84,20 +100,8 @@ export default function HotelRecommendations({
           {hotels.map((hotel, index) => (
             <div key={hotel.id || index} className="hotel-card">
 
-              {/* Photo */}
-              <div className="hotel-card-img-wrapper">
-                <img
-                  src={getHotelImage(hotel.imageKeyword)}
-                  alt={hotel.name}
-                  className="hotel-card-img"
-                  loading="lazy"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = FALLBACK_IMG;
-                  }}
-                />
-                {/* Price Badge overlaid on image */}
-                <div className="hotel-price-badge">{hotel.priceRange}</div>
-              </div>
+              {/* Smart async photo */}
+              <HotelImage hotel={hotel} />
 
               {/* Body */}
               <div className="hotel-card-body">

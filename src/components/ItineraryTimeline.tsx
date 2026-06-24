@@ -1,30 +1,40 @@
 // src/components/ItineraryTimeline.tsx
-import type { FullTripItinerary } from '../types/travel';
+import { useDestinationImage } from '../hooks/useDestinationImage';
+import type { FullTripItinerary, Activity } from '../types/travel';
 
 interface TimelineProps {
   tripData: FullTripItinerary;
 }
 
-// Generates a deterministic Picsum photo URL based on the keyword.
-// Picsum Photos (picsum.photos) is free and does not require an API key.
-// We derive a stable numeric seed from the string so the same activity
-// always shows the same image across page loads.
-function hashCode(str: string): number {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
-    hash |= 0; // Convert to 32-bit integer
-  }
-  return Math.abs(hash);
-}
-
-function getActivityImage(keyword: string): string {
-  const seed = hashCode(keyword) % 1000; // Picsum has ~1000 curated photos
-  return `https://picsum.photos/seed/${seed}/600/400`;
-}
-
 const FALLBACK_IMG = 'https://picsum.photos/seed/travel/600/400';
+
+// Individual activity image component using the smart hook
+function ActivityImage({ activity }: { activity: Activity }) {
+  const { src, isLoading, isReal } = useDestinationImage(activity.imageKeyword, 600, 400);
+
+  return (
+    <div className="activity-img-wrapper">
+      <img
+        src={src}
+        alt={activity.activityName}
+        className={`activity-img ${isLoading ? 'img-resolving' : ''}`}
+        loading="lazy"
+        onError={(e) => {
+          (e.target as HTMLImageElement).src = FALLBACK_IMG;
+        }}
+      />
+      {/* Real photo badge */}
+      {isReal && (
+        <div className="real-photo-badge" title="Real destination photo">
+          📸
+        </div>
+      )}
+      <div className="activity-img-label">
+        📍 {activity.activityName}
+      </div>
+    </div>
+  );
+}
 
 export default function ItineraryTimeline({ tripData }: TimelineProps) {
   return (
@@ -54,21 +64,8 @@ export default function ItineraryTimeline({ tripData }: TimelineProps) {
                 {/* Activity Card */}
                 <div className="activity-card">
 
-                  {/* Photo Header */}
-                  <div className="activity-img-wrapper">
-                    <img
-                      src={getActivityImage(activity.imageKeyword)}
-                      alt={activity.activityName}
-                      className="activity-img"
-                      loading="lazy"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = FALLBACK_IMG;
-                      }}
-                    />
-                    <div className="activity-img-label">
-                      📍 {activity.activityName}
-                    </div>
-                  </div>
+                  {/* Photo Header — async smart image */}
+                  <ActivityImage activity={activity} />
 
                   {/* Card Body */}
                   <div className="activity-body">
