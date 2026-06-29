@@ -24,8 +24,22 @@ export async function generateTravelItinerary(query: TripQuery): Promise<FullTri
   const hotelTypeHint = hotelHints.join(', or ');
   const combinedVibeText = styles.join(' & ');
 
+  const isMultiDest = query.destinations && query.destinations.length > 1;
+  const destinationText = isMultiDest
+    ? `covering these destinations in sequence: ${query.destinations!.join(', ')}`
+    : `to ${query.destination}`;
+
+  const multiDestInstructions = isMultiDest
+    ? `\n    MULTIPLE DESTINATIONS RULES:
+    1. Distribute the ${query.durationInDays} days logically across these destinations in the order listed: ${query.destinations!.join(', ')}. E.g. spend consecutive days in each city (Day 1-2 in Mysore, Day 3-5 in Coorg).
+    2. Group activities consecutively by destination. Do not mix cities on the same day unless transitioning.
+    3. Clearly describe the travel/transition from one city to the next (e.g. "3 hours driving to Coorg") as part of the transitTimeToNextStop or activity descriptions.
+    4. Provide hotel recommendations that represent each of the cities visited (e.g. recommend 2 hotels in Mysore and 2 hotels in Coorg, indicating the city name in their area/address).`
+    : '';
+
   const prompt = `
-    You are an expert travel guide. Create a highly realistic, logical ${query.durationInDays}-day itinerary for a trip to ${query.destination}, starting from ${query.startingPoint}, blending elements of ${combinedVibeText} travel vibes.
+    You are an expert travel guide. Create a highly realistic, logical ${query.durationInDays}-day itinerary for a trip ${destinationText}, starting from ${query.startingPoint}, blending elements of ${combinedVibeText} travel vibes.
+    ${multiDestInstructions}
 
     You MUST return ONLY a valid JSON object matching this EXACT structure. Do NOT include markdown fences or any extra text.
 
@@ -33,6 +47,7 @@ export async function generateTravelItinerary(query: TripQuery): Promise<FullTri
       "id": "trip_unique_id",
       "metadata": {
         "destination": "${query.destination}",
+        "destinations": ${JSON.stringify(query.destinations || [query.destination])},
         "durationInDays": ${query.durationInDays},
         "travelStyle": "${query.travelStyle}",
         "travelStyles": ${JSON.stringify(styles)},

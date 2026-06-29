@@ -18,9 +18,18 @@ export default function TripPlannerForm({ onSubmit }: FormProps) {
   const [startingPoint, setStartingPoint] = useState(
     () => localStorage.getItem('last_start') || ''
   );
-  const [destination, setDestination] = useState(
-    () => localStorage.getItem('last_dest') || ''
-  );
+  const [destinations, setDestinations] = useState<string[]>(() => {
+    const cached = localStorage.getItem('last_destinations');
+    if (cached) {
+      try {
+        return JSON.parse(cached);
+      } catch (e) {
+        // ignore
+      }
+    }
+    const legacyDest = localStorage.getItem('last_dest') || '';
+    return legacyDest ? [legacyDest] : [''];
+  });
   const [duration, setDuration] = useState(
     () => Number(localStorage.getItem('last_duration')) || 3
   );
@@ -37,6 +46,22 @@ export default function TripPlannerForm({ onSubmit }: FormProps) {
     return legacyStyle ? [legacyStyle] : ['Adventure'];
   });
 
+  const handleAddDestination = () => {
+    if (destinations.length >= 4) return;
+    setDestinations([...destinations, '']);
+  };
+
+  const handleRemoveDestination = (index: number) => {
+    if (destinations.length <= 1) return;
+    setDestinations(destinations.filter((_, i) => i !== index));
+  };
+
+  const handleChangeDestination = (index: number, value: string) => {
+    const updated = [...destinations];
+    updated[index] = value;
+    setDestinations(updated);
+  };
+
   const handleToggleStyle = (value: TripQuery['travelStyle']) => {
     setTravelStyles((prev) => {
       if (prev.includes(value)) {
@@ -51,8 +76,15 @@ export default function TripPlannerForm({ onSubmit }: FormProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const filteredDestinations = destinations.filter((d) => d.trim() !== '');
+    if (filteredDestinations.length === 0) return;
+
     localStorage.setItem('last_start', startingPoint);
-    localStorage.setItem('last_dest', destination);
+    localStorage.setItem('last_destinations', JSON.stringify(filteredDestinations));
+    
+    // Legacy fallback
+    const fullDestString = filteredDestinations.join(' → ');
+    localStorage.setItem('last_dest', fullDestString);
     localStorage.setItem('last_duration', duration.toString());
     localStorage.setItem('last_styles', JSON.stringify(travelStyles));
     
@@ -60,7 +92,8 @@ export default function TripPlannerForm({ onSubmit }: FormProps) {
     localStorage.setItem('last_style', primaryStyle);
 
     onSubmit({
-      destination,
+      destination: fullDestString,
+      destinations: filteredDestinations,
       durationInDays: duration,
       travelStyle: travelStyles.join(', ') as any,
       travelStyles,
@@ -72,8 +105,8 @@ export default function TripPlannerForm({ onSubmit }: FormProps) {
     <div className="form-card">
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
 
-        {/* Starting Point + Destination */}
-        <div className="form-row">
+        {/* Starting Point + Dynamic Destinations */}
+        <div className="form-column-inputs" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div className="form-group">
             <label className="form-label">🛫 Starting From</label>
             <input
@@ -85,16 +118,44 @@ export default function TripPlannerForm({ onSubmit }: FormProps) {
               className="form-input"
             />
           </div>
+
           <div className="form-group">
-            <label className="form-label">📍 Destination</label>
-            <input
-              type="text"
-              required
-              placeholder="e.g., Gokarna"
-              value={destination}
-              onChange={(e) => setDestination(e.target.value)}
-              className="form-input"
-            />
+            <label className="form-label">📍 Destination(s)</label>
+            <div className="destinations-list" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {destinations.map((dest, index) => (
+                <div key={index} className="destination-input-row" style={{ display: 'flex', gap: '8px', alignItems: 'center', animation: 'fadeIn 0.25s ease' }}>
+                  <input
+                    type="text"
+                    required
+                    placeholder={index === 0 ? "e.g., Mysore" : `e.g., Destination ${index + 1}`}
+                    value={dest}
+                    onChange={(e) => handleChangeDestination(index, e.target.value)}
+                    className="form-input"
+                    style={{ flex: 1 }}
+                  />
+                  {destinations.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveDestination(index)}
+                      className="remove-destination-btn"
+                      title="Remove destination"
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+              ))}
+              
+              {destinations.length < 4 && (
+                <button
+                  type="button"
+                  onClick={handleAddDestination}
+                  className="add-destination-btn"
+                >
+                  ➕ Add Another City
+                </button>
+              )}
+            </div>
           </div>
         </div>
 

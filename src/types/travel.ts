@@ -6,6 +6,7 @@ export interface TripQuery {
   travelStyle: 'Adventure' | 'Relaxation' | 'Budget' | 'Culture' | 'Luxury';
   travelStyles?: ('Adventure' | 'Relaxation' | 'Budget' | 'Culture' | 'Luxury')[];
   startingPoint: string;
+  destinations?: string[];
 }
 
 export interface RestaurantSuggestion {

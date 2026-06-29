@@ -26,20 +26,31 @@ const BASE_DAILY_USD: Record<string, number> = {
  * Destination cost multipliers relative to global average.
  */
 function getDestinationMultiplier(destination: string): number {
-  const d = destination.toLowerCase();
-  if (
-    d.includes('switzerland') || d.includes('japan') || d.includes('paris') ||
-    d.includes('london') || d.includes('new york') || d.includes('dubai') ||
-    d.includes('singapore') || d.includes('scandinavia') || d.includes('norway')
-  ) return 1.3;
-  if (
-    d.includes('india') || d.includes('thailand') || d.includes('vietnam') ||
-    d.includes('indonesia') || d.includes('egypt') || d.includes('nepal') ||
-    d.includes('cambodia') || d.includes('bali') || d.includes('goa') ||
-    d.includes('mumbai') || d.includes('delhi') || d.includes('bangalore') ||
-    d.includes('jaipur')
-  ) return 0.7;
-  return 1.0;
+  const parts = destination.split(/[→,;]/).map((p) => p.trim().toLowerCase());
+  let totalMultiplier = 0;
+  
+  parts.forEach((part) => {
+    let mult = 1.0;
+    if (
+      part.includes('switzerland') || part.includes('japan') || part.includes('paris') ||
+      part.includes('london') || part.includes('new york') || part.includes('dubai') ||
+      part.includes('singapore') || part.includes('scandinavia') || part.includes('norway')
+    ) {
+      mult = 1.3;
+    } else if (
+      part.includes('india') || part.includes('thailand') || part.includes('vietnam') ||
+      part.includes('indonesia') || part.includes('egypt') || part.includes('nepal') ||
+      part.includes('cambodia') || part.includes('bali') || part.includes('goa') ||
+      part.includes('mumbai') || part.includes('delhi') || part.includes('bangalore') ||
+      part.includes('jaipur') || part.includes('kerala') || part.includes('bengaluru') ||
+      part.includes('mysore') || part.includes('coorg') || part.includes('gokarna')
+    ) {
+      mult = 0.7;
+    }
+    totalMultiplier += mult;
+  });
+  
+  return parts.length > 0 ? totalMultiplier / parts.length : 1.0;
 }
 
 /**
