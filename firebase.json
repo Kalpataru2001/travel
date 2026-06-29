@@ -1,5 +1,6 @@
 {
   "hosting": {
+    "site": "travel-app-65ff1",
     "public": "dist",
     "ignore": [
       "firebase.json",
