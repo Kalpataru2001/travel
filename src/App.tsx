@@ -22,12 +22,13 @@ import { collection, addDoc, serverTimestamp, query, where, getDocs } from 'fire
 import { auth, db, googleProvider } from './utils/firebase';
 import { signInWithPopup } from 'firebase/auth';
 import { useDestinationImage } from './hooks/useDestinationImage';
+import UserProfile from './components/UserProfile';
 
 function App() {
   const [tripData, setTripData] = useState<FullTripItinerary | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [activeView, setActiveView] = useState<'planner' | 'saved'>('planner');
+  const [activeView, setActiveView] = useState<'planner' | 'saved' | 'profile'>('planner');
   const [currentTemp, setCurrentTemp] = useState<number | undefined>(undefined);
   const [currentCondition, setCurrentCondition] = useState<string | undefined>(undefined);
 
@@ -348,6 +349,11 @@ function App() {
       />
 
       <div className="app-content">
+
+        {/* ── PROFILE VIEW ── */}
+        {activeView === 'profile' && (
+          <UserProfile onBackToPlanner={() => setActiveView('planner')} />
+        )}
 
         {/* ── SAVED TRIPS VIEW ── */}
         {activeView === 'saved' && (

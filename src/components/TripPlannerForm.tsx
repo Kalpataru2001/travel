@@ -16,7 +16,7 @@ const TRAVEL_STYLES: { value: TripQuery['travelStyle']; emoji: string; label: st
 
 export default function TripPlannerForm({ onSubmit }: FormProps) {
   const [startingPoint, setStartingPoint] = useState(
-    () => localStorage.getItem('last_start') || ''
+    () => localStorage.getItem('travel_profile_home_city') || localStorage.getItem('last_start') || ''
   );
   const [destinations, setDestinations] = useState<string[]>(() => {
     const cached = localStorage.getItem('last_destinations');
@@ -38,6 +38,14 @@ export default function TripPlannerForm({ onSubmit }: FormProps) {
     if (cachedStyles) {
       try {
         return JSON.parse(cachedStyles);
+      } catch (e) {
+        // ignore
+      }
+    }
+    const profileVibes = localStorage.getItem('travel_profile_preferred_vibes');
+    if (profileVibes) {
+      try {
+        return JSON.parse(profileVibes);
       } catch (e) {
         // ignore
       }

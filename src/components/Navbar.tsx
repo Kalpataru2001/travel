@@ -5,8 +5,8 @@ import { useState } from 'react';
 import type { FullTripItinerary } from "../types/travel";
 
 interface NavbarProps {
-  currentView: 'planner' | 'saved';
-  onViewChange: (view: 'planner' | 'saved') => void;
+  currentView: 'planner' | 'saved' | 'profile';
+  onViewChange: (view: 'planner' | 'saved' | 'profile') => void;
   tripData?: FullTripItinerary | null;
   onSaveTrip?: () => void;
   isSaving?: boolean;
@@ -85,6 +85,12 @@ export default function Navbar({
             onClick={() => onViewChange('saved')}
           >
             📂 My Trips
+          </button>
+          <button
+            className={`nav-tab ${currentView === 'profile' ? 'active' : ''}`}
+            onClick={() => onViewChange('profile')}
+          >
+            👤 Profile
           </button>
         </div>
       )}
