@@ -24,6 +24,31 @@ export async function generateTravelItinerary(query: TripQuery): Promise<FullTri
   const hotelTypeHint = hotelHints.join(', or ');
   const combinedVibeText = styles.join(' & ');
 
+  // Dynamic guidelines for active travel styles
+  const vibeInstructionList: string[] = [];
+  styles.forEach((style) => {
+    if (style === 'Adventure') {
+      vibeInstructionList.push("- **Adventure**: Include active, outdoor, and thrilling experiences. For example, if Goa or a beach destination is selected, you MUST include water sports (like scuba diving, paragliding, jet skiing, parasailing, kayaking), jungle trekking, spice plantation tours, or hiking rather than just passive sightseeing.");
+    }
+    if (style === 'Relaxation') {
+      vibeInstructionList.push("- **Relaxation**: Include leisurely activities, beach lounging, spa treatments, yoga sessions, sunset viewpoints, and slow walks.");
+    }
+    if (style === 'Budget') {
+      vibeInstructionList.push("- **Budget**: Include low-cost or free experiences, local street markets, walking tours, public park visits, and pocket-friendly tips.");
+    }
+    if (style === 'Culture') {
+      vibeInstructionList.push("- **Culture**: Include heritage temples, churches, historical museums, local art workshops, cooking classes, or traditional food tours.");
+    }
+    if (style === 'Luxury') {
+      vibeInstructionList.push("- **Luxury**: Include premium beach clubs, private cruises, high-end fine dining, helicopter tours, or exclusive private guide bookings.");
+    }
+  });
+  const dynamicVibeGuidelines = vibeInstructionList.length > 0
+    ? `\n    VIBE SATISFACTION RULES:
+    You MUST satisfy all of the selected travel vibes in the activities:
+    ${vibeInstructionList.join('\n    ')}`
+    : '';
+
   const isMultiDest = query.destinations && query.destinations.length > 1;
   const destinationText = isMultiDest
     ? `covering these destinations in sequence: ${query.destinations!.join(', ')}`
@@ -40,6 +65,7 @@ export async function generateTravelItinerary(query: TripQuery): Promise<FullTri
   const prompt = `
     You are an expert travel guide. Create a highly realistic, logical ${query.durationInDays}-day itinerary for a trip ${destinationText}, starting from ${query.startingPoint}, blending elements of ${combinedVibeText} travel vibes.
     ${multiDestInstructions}
+    ${dynamicVibeGuidelines}
 
     You MUST return ONLY a valid JSON object matching this EXACT structure. Do NOT include markdown fences or any extra text.
 
