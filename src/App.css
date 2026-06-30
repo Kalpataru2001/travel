@@ -1507,10 +1507,6 @@ input[type="range"] {
     opacity: 1 !important;
   }
 
-  /* Assistant drawer — limit to viewport width on tablets */
-  .assistant-drawer {
-    width: min(400px, 100vw);
-  }
 }
 
 @media (max-width: 480px) {
@@ -3011,6 +3007,19 @@ input[type="range"] {
 }
 
 /* Responsive Drawer adjustments */
+@media (max-width: 768px) {
+  .assistant-drawer {
+    /* Start below the 64px sticky navbar so content is fully visible */
+    top: 64px;
+    height: calc(100% - 64px);
+    width: min(400px, 100vw);
+    right: -110vw;
+  }
+  .drawer-open {
+    right: 0;
+  }
+}
+
 @media (max-width: 480px) {
   .assistant-drawer {
     width: 100%;
@@ -3252,6 +3261,8 @@ input[type="range"] {
   overflow-y: auto;
   box-shadow: 0 20px 48px rgba(0,0,0,0.55);
   animation: fadeIn 0.15s ease;
+  /* Prevent clipping off left edge on mobile */
+  max-width: calc(100vw - 32px);
 }
 
 .currency-dropdown-search-header {
@@ -3262,6 +3273,13 @@ input[type="range"] {
   text-transform: uppercase;
   letter-spacing: 0.5px;
   border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+
+@media (max-width: 768px) {
+  .budget-currency-dropdown {
+    right: auto;
+    left: 0;
+  }
 }
 
 .currency-dropdown-list {
