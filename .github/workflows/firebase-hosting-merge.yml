@@ -24,7 +24,7 @@ jobs:
           VITE_WEATHER_API_KEY: ${{ secrets.VITE_WEATHER_API_KEY }}
       - name: Deploy to Firebase Hosting
         run: |
-          npx firebase-tools target:apply hosting app travel-app-65ff1
-          npx firebase-tools deploy --only hosting --project travel-app-65ff1
+          npx firebase-tools target:apply hosting app travel-app-65ff1 --debug
+          npx firebase-tools deploy --only hosting --project travel-app-65ff1 --debug
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
