@@ -1,6 +1,8 @@
 // src/components/HotelRecommendations.tsx
+import { useEffect } from 'react';
 import { useDestinationImage } from '../hooks/useDestinationImage';
 import type { HotelRecommendation } from '../types/travel';
+import { initTiltCards } from '../utils/animations';
 
 interface HotelRecommendationsProps {
   hotels: HotelRecommendation[];
@@ -76,6 +78,19 @@ export default function HotelRecommendations({
   travelStyle,
 }: HotelRecommendationsProps) {
   if (!hotels || hotels.length === 0) return null;
+
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      return initTiltCards('.hotel-card', {
+        maxTilt: 10,
+        perspective: 900,
+        glowColor: 'rgba(245,158,11,0.22)',
+        scaleOnHover: 1.04,
+      });
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [hotels.length]);
 
   return (
     <section className="hotels-section">

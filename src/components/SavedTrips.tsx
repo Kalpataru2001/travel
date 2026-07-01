@@ -4,6 +4,7 @@ import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db, auth } from '../utils/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import type { FullTripItinerary } from '../types/travel';
+import { initStaggerCards, initTiltCards } from '../utils/animations';
 
 interface SavedTripsProps {
   onLoadTrip: (trip: FullTripItinerary) => void;
@@ -42,6 +43,15 @@ export default function SavedTrips({ onLoadTrip }: SavedTripsProps) {
       window.removeEventListener('offline', handleOffline);
     };
   }, []);
+
+  // 3D stagger + tilt for trip cards after they load
+  useEffect(() => {
+    if (!isLoading && savedTrips.length > 0) {
+      const t1 = setTimeout(() => initStaggerCards('.trip-card'), 100);
+      const cleanup = initTiltCards('.trip-card', { maxTilt: 7, glowColor: 'rgba(14,165,233,0.18)' });
+      return () => { clearTimeout(t1); cleanup(); };
+    }
+  }, [isLoading, savedTrips.length]);
 
   useEffect(() => {
     const fetchTrips = async () => {

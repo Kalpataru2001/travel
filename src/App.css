@@ -119,6 +119,75 @@ body {
   50%       { opacity: 1; transform: scale(1.2); }
 }
 
+/* ── NEW 3D KEYFRAMES ── */
+
+@keyframes kenBurns {
+  0%   { transform: scale(1) translate(0, 0); }
+  50%  { transform: scale(1.06) translate(-1%, 0.5%); }
+  100% { transform: scale(1) translate(0, 0); }
+}
+
+@keyframes auroraOrb1 {
+  0%   { transform: translate(0, 0) scale(1); }
+  33%  { transform: translate(4%, -3%) scale(1.08); }
+  66%  { transform: translate(-3%, 5%) scale(0.95); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+
+@keyframes auroraOrb2 {
+  0%   { transform: translate(0, 0) scale(1); }
+  40%  { transform: translate(-5%, 4%) scale(1.06); }
+  80%  { transform: translate(4%, -2%) scale(0.97); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+
+@keyframes auroraOrb3 {
+  0%   { transform: translate(0, 0) scale(1); }
+  50%  { transform: translate(3%, 5%) scale(1.05); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 18px rgba(14,165,233,0.3), 0 0 0 0 rgba(14,165,233,0.15); }
+  50%       { box-shadow: 0 0 32px rgba(14,165,233,0.55), 0 0 18px 6px rgba(14,165,233,0.12); }
+}
+
+@keyframes tagFloat {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50%       { transform: translateY(-6px) scale(1.02); }
+}
+
+@keyframes stampIn {
+  0%   { transform: scale(0.85) translateY(8px); opacity: 0; }
+  70%  { transform: scale(1.04) translateY(-2px); opacity: 1; }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+@keyframes heroTitleReveal {
+  0%   { opacity: 0; transform: perspective(600px) rotateX(20deg) translateY(20px); }
+  100% { opacity: 1; transform: perspective(600px) rotateX(0) translateY(0); }
+}
+
+@keyframes sceneEntrance {
+  0%   { opacity: 0; transform: scale(0.92) translateX(30px); }
+  100% { opacity: 1; transform: scale(1) translateX(0); }
+}
+
+@keyframes orbPulse {
+  0%, 100% { transform: scale(1); opacity: 0.55; }
+  50%       { transform: scale(1.06); opacity: 0.75; }
+}
+
+@keyframes navShimmer {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+
+@keyframes ctaGlow {
+  0%, 100% { box-shadow: 0 8px 24px rgba(14,165,233,0.35), 0 0 0 0 rgba(14,165,233,0); }
+  50%       { box-shadow: 0 12px 32px rgba(14,165,233,0.55), 0 0 0 8px rgba(14,165,233,0.08); }
+}
+
 /* ============================================================
    LOADING STATE
    ============================================================ */
@@ -5541,5 +5610,617 @@ input[type="range"] {
     justify-content: center;
     padding: 10px 16px;
     font-size: 0.9rem;
+  }
+}
+
+/* ============================================================
+   3D AURORA BACKGROUND ORBS
+   Animated radial gradient orbs drifting behind all content.
+   ============================================================ */
+.app-shell::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.app-shell {
+  isolation: isolate;
+}
+
+/* Aurora orbs via separate layer elements injected via CSS */
+.aurora-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.aurora-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  mix-blend-mode: screen;
+  opacity: 0.18;
+}
+
+.aurora-orb-1 {
+  width: 55vw;
+  height: 55vw;
+  background: radial-gradient(circle, #0ea5e9 0%, transparent 70%);
+  top: -15%;
+  left: -10%;
+  animation: auroraOrb1 22s ease-in-out infinite;
+}
+
+.aurora-orb-2 {
+  width: 50vw;
+  height: 50vw;
+  background: radial-gradient(circle, #7c3aed 0%, transparent 70%);
+  bottom: -10%;
+  right: -10%;
+  animation: auroraOrb2 28s ease-in-out infinite;
+  opacity: 0.14;
+}
+
+.aurora-orb-3 {
+  width: 38vw;
+  height: 38vw;
+  background: radial-gradient(circle, #10b981 0%, transparent 70%);
+  top: 40%;
+  right: 10%;
+  animation: auroraOrb3 18s ease-in-out infinite;
+  opacity: 0.1;
+}
+
+/* ============================================================
+   HERO SPLIT LAYOUT
+   Left: text + form   |   Right: Three.js globe
+   ============================================================ */
+.landing-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 20px 0 40px;
+  animation: fadeIn 0.6s ease;
+  width: 100%;
+}
+
+.hero-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  align-items: center;
+  width: 100%;
+  min-height: 88vh;
+  padding: 20px 0;
+}
+
+.hero-left {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  padding-right: 16px;
+}
+
+.hero-left .hero-badge {
+  margin-bottom: 20px;
+  animation: stampIn 0.6s ease 0.1s both;
+}
+
+.hero-left .hero-title {
+  text-align: left;
+  animation: heroTitleReveal 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.2s both;
+}
+
+.hero-left .hero-subtitle {
+  text-align: left;
+  animation: fadeIn 0.6s ease 0.4s both;
+}
+
+/* ── 3D Scene container ── */
+.hero-right {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 580px;
+  animation: sceneEntrance 1s cubic-bezier(0.22, 1, 0.36, 1) 0.3s both;
+}
+
+.hero-3d-scene {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+}
+
+/* Subtle glow ring behind the globe */
+.hero-right::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 70%;
+  height: 70%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(14,165,233,0.12) 0%, transparent 70%);
+  animation: orbPulse 4s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Floating destination tags ── */
+.hero-globe-labels {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.hero-globe-tag {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  background: rgba(8, 20, 48, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(14, 165, 233, 0.3);
+  border-radius: var(--radius-pill);
+  color: #e0f2fe;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08);
+  animation: tagFloat 3.5s ease-in-out infinite;
+  z-index: 2;
+}
+
+/* ============================================================
+   NAVBAR — Shimmer line effect on page load
+   ============================================================ */
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 40px;
+  height: 72px;
+  background: rgba(8, 15, 35, 0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  animation: slideDown 0.4s ease;
+  overflow: hidden;
+}
+
+.navbar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 60%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(14,165,233,0.6), rgba(16,185,129,0.5), transparent);
+  animation: navShimmer 3s ease 0.5s both;
+}
+
+/* ── Navbar logo 3D depth ── */
+.navbar-logo-icon {
+  width: 38px;
+  height: 38px;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.4);
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+  transform-style: preserve-3d;
+}
+
+.navbar-brand:hover .navbar-logo-icon {
+  transform: perspective(200px) rotateY(-15deg) rotateX(5deg) scale(1.08);
+  box-shadow: 0 8px 20px rgba(14, 165, 233, 0.6), -4px 2px 12px rgba(16,185,129,0.3);
+}
+
+/* ============================================================
+   TRAVEL STYLE CARDS — 3D lift & stamp
+   ============================================================ */
+.style-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 8px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  cursor: pointer;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.25s ease,
+              border-color 0.25s ease,
+              background 0.25s ease;
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-white-muted);
+  transform-style: preserve-3d;
+  perspective: 600px;
+}
+
+.style-card:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: white;
+  transform: perspective(600px) translateZ(14px) rotateX(-6deg);
+  box-shadow: 0 18px 32px rgba(0,0,0,0.3), 0 0 16px rgba(14,165,233,0.15);
+}
+
+.style-card.selected {
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.2), rgba(16, 185, 129, 0.2));
+  border-color: var(--primary);
+  color: white;
+  box-shadow: 0 0 20px rgba(14, 165, 233, 0.25);
+  animation: stampIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.style-card-emoji {
+  font-size: 1.5rem;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  display: inline-block;
+}
+
+.style-card:hover .style-card-emoji {
+  transform: scale(1.25) translateY(-3px);
+}
+
+.style-card.selected .style-card-emoji {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* ============================================================
+   TRIP HEADER — Ken Burns parallax banner
+   ============================================================ */
+.trip-header-bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 0.35;
+  transition: background-image 0.6s ease, opacity 0.6s ease;
+  animation: kenBurns 18s ease-in-out infinite;
+  transform-origin: center center;
+}
+
+/* Destination title 3D entrance */
+.trip-destination {
+  font-family: var(--font-display);
+  font-size: clamp(2.5rem, 6vw, 4rem);
+  font-weight: 700;
+  color: white;
+  margin: 0 0 12px;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  letter-spacing: -1px;
+  animation: heroTitleReveal 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both;
+}
+
+/* Trip stat pills — stagger entrance */
+.trip-stat {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 20px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-pill);
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 600;
+  backdrop-filter: blur(8px);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  animation: stampIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.trip-stat:nth-child(1) { animation-delay: 0.3s; }
+.trip-stat:nth-child(2) { animation-delay: 0.45s; }
+.trip-stat:nth-child(3) { animation-delay: 0.6s; }
+
+.trip-stat:hover {
+  transform: translateY(-3px) scale(1.04);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+}
+
+/* ============================================================
+   HOTEL CARDS — enhanced 3D hover (JS tilt supplements this)
+   ============================================================ */
+.hotel-card {
+  width: 300px;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: border-color 0.25s ease;
+  cursor: default;
+  transform-style: preserve-3d;
+  position: relative;
+}
+
+/* Specular glint overlay — animated on JS tilt */
+.hotel-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.06) 0%, transparent 50%);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  border-radius: var(--radius-lg);
+  z-index: 2;
+}
+
+.hotel-card:hover::after {
+  opacity: 1;
+}
+
+.hotel-card:hover {
+  border-color: rgba(245, 158, 11, 0.35);
+}
+
+/* ============================================================
+   SAVED TRIP CARDS — 3D depth hover (supplements JS tilt)
+   ============================================================ */
+.trip-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: border-color 0.25s ease;
+  cursor: pointer;
+  transform-style: preserve-3d;
+  position: relative;
+}
+
+.trip-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, transparent 50%);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  border-radius: var(--radius-lg);
+  z-index: 2;
+}
+
+.trip-card:hover::after {
+  opacity: 1;
+}
+
+.trip-card:hover {
+  border-color: rgba(14, 165, 233, 0.35);
+}
+
+/* ============================================================
+   CTA BUTTONS — continuous glow pulse + 3D press
+   ============================================================ */
+.btn-primary {
+  width: 100%;
+  padding: 16px 24px;
+  background: linear-gradient(135deg, var(--primary) 0%, #3b82f6 50%, var(--accent) 100%);
+  background-size: 200% auto;
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+              background-position 0.4s ease;
+  letter-spacing: 0.3px;
+  animation: ctaGlow 3s ease-in-out infinite;
+  position: relative;
+  overflow: hidden;
+  transform-style: preserve-3d;
+}
+
+.btn-primary::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.btn-primary:hover {
+  background-position: right center;
+  transform: perspective(300px) translateZ(6px) translateY(-2px);
+}
+
+.btn-primary:hover::before {
+  opacity: 1;
+}
+
+.btn-primary:active {
+  transform: perspective(300px) translateZ(-3px) scale(0.97);
+  animation: none;
+}
+
+/* Save trip & sign in buttons glow */
+.save-trip-btn:not(:disabled) {
+  animation: glowPulse 3.5s ease-in-out infinite;
+}
+
+.signin-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 20px;
+  background: linear-gradient(135deg, var(--primary), #3b82f6);
+  color: white;
+  border: none;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease;
+  box-shadow: 0 4px 14px rgba(14, 165, 233, 0.35);
+}
+
+.signin-btn:hover {
+  transform: translateY(-3px) scale(1.04);
+  box-shadow: 0 10px 24px rgba(14, 165, 233, 0.55);
+}
+
+/* ============================================================
+   ACTIVITY CARDS — 3D reveal-init class (JS sets transform)
+   The actual reveal animation is driven by animations.ts.
+   ============================================================ */
+.activity-item {
+  position: relative;
+  padding-left: 28px;
+  margin-bottom: 20px;
+}
+
+.activity-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.25s ease, border-color 0.25s ease;
+  transform-style: preserve-3d;
+}
+
+.activity-card:hover {
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(14, 165, 233, 0.25);
+  transform: perspective(800px) translateZ(8px) translateY(-3px) rotateX(-2deg);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35), 0 0 16px rgba(14,165,233,0.12);
+}
+
+/* Trail dot 3D pop */
+.trail-dot {
+  position: absolute;
+  left: 0;
+  top: 18px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  border: 3px solid rgba(15, 23, 42, 0.8);
+  box-shadow: 0 0 0 2px var(--primary), 0 0 12px rgba(14, 165, 233, 0.4);
+  z-index: 1;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+}
+
+.activity-item:hover .trail-dot {
+  transform: scale(1.4);
+  box-shadow: 0 0 0 3px var(--primary), 0 0 18px rgba(14, 165, 233, 0.6);
+}
+
+/* ============================================================
+   FORM CARD — subtle 3D hover lift
+   ============================================================ */
+.form-card {
+  width: 100%;
+  max-width: 680px;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-xl);
+  padding: 40px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.4);
+  animation: fadeIn 0.6s ease 0.25s both;
+  transition: transform 0.35s ease, box-shadow 0.35s ease;
+  transform-style: preserve-3d;
+}
+
+/* ============================================================
+   RESPONSIVE — 3D hero layout
+   ============================================================ */
+@media (max-width: 1100px) {
+  .hero-split {
+    grid-template-columns: 1fr;
+    gap: 24px;
+    min-height: auto;
+    padding: 0;
+  }
+
+  .hero-left {
+    align-items: center;
+    text-align: center;
+    padding-right: 0;
+    order: 1;
+  }
+
+  .hero-left .hero-title,
+  .hero-left .hero-subtitle {
+    text-align: center;
+  }
+
+  .hero-right {
+    height: 420px;
+    order: 0;
+  }
+
+  .hero-right::before {
+    width: 60%;
+    height: 60%;
+  }
+}
+
+@media (max-width: 768px) {
+  .hero-right {
+    height: 320px;
+  }
+
+  .aurora-orb-1 { width: 80vw; height: 80vw; }
+  .aurora-orb-2 { width: 70vw; height: 70vw; }
+  .aurora-orb-3 { width: 55vw; height: 55vw; }
+
+  .hero-globe-tag {
+    font-size: 0.7rem;
+    padding: 4px 9px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-right {
+    height: 260px;
+  }
+
+  .hero-globe-tag {
+    display: none;
+  }
+}
+
+/* Reduce motion: disable all non-essential animations */
+@media (prefers-reduced-motion: reduce) {
+  .aurora-orb,
+  .hero-globe-tag,
+  .trip-header-bg,
+  .trip-stat,
+  .style-card,
+  .btn-primary,
+  .save-trip-btn,
+  .trail-dot {
+    animation: none !important;
+    transition: none !important;
   }
 }

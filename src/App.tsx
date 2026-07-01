@@ -23,6 +23,8 @@ import { auth, db, googleProvider } from './utils/firebase';
 import { signInWithPopup } from 'firebase/auth';
 import { useDestinationImage } from './hooks/useDestinationImage';
 import UserProfile from './components/UserProfile';
+import HeroScene from './components/HeroScene';
+import { initScrollReveal } from './utils/animations';
 
 function App() {
   const [tripData, setTripData] = useState<FullTripItinerary | null>(null);
@@ -333,6 +335,12 @@ function App() {
 
   return (
     <div className="app-shell">
+      {/* Aurora background orbs — purely decorative, pointer-events:none */}
+      <div className="aurora-layer" aria-hidden="true">
+        <div className="aurora-orb aurora-orb-1" />
+        <div className="aurora-orb aurora-orb-2" />
+        <div className="aurora-orb aurora-orb-3" />
+      </div>
       {/* Navbar — contains Save Trip button when trip is loaded */}
       <Navbar
         currentView={activeView}
@@ -392,21 +400,37 @@ function App() {
             {/* 1. Landing / Form — no trip, not loading, no shared views loading/errored */}
             {!tripData && !isLoading && !isSharedLoading && !sharedError && (
               <div className="landing-hero">
-                <h1 className="hero-title">
-                  Your Next<br />
-                  <span>Adventure Awaits</span>
-                </h1>
-                <p className="hero-subtitle">
-                  Tell us where you want to go and we'll craft a personalized day-by-day itinerary with maps, local tips, and hidden gems — in seconds.
-                </p>
-
-                <TripPlannerForm onSubmit={handleFormSubmit} />
-
-                {error && (
-                  <div className="error-banner" style={{ maxWidth: 680, marginTop: 16 }}>
-                    ⚠️ {error}
+                {/* ── Split layout: text+form LEFT, 3D globe RIGHT ── */}
+                <div className="hero-split">
+                  {/* Left: Text + Form */}
+                  <div className="hero-left">
+                    <div className="hero-badge">✈️ AI-Powered Travel Planner</div>
+                    <h1 className="hero-title">
+                      Your Next<br />
+                      <span>Adventure Awaits</span>
+                    </h1>
+                    <p className="hero-subtitle">
+                      Tell us where you want to go and we'll craft a personalized day-by-day itinerary with maps, local tips, and hidden gems — in seconds.
+                    </p>
+                    <TripPlannerForm onSubmit={handleFormSubmit} />
+                    {error && (
+                      <div className="error-banner" style={{ maxWidth: 680, marginTop: 16 }}>
+                        ⚠️ {error}
+                      </div>
+                    )}
                   </div>
-                )}
+
+                  {/* Right: Three.js 3D Globe */}
+                  <div className="hero-right">
+                    <HeroScene />
+                    <div className="hero-globe-labels">
+                      <span className="hero-globe-tag" style={{ top: '18%', left: '12%', animationDelay: '0s' }}>🗺️ Tokyo</span>
+                      <span className="hero-globe-tag" style={{ top: '30%', right: '8%', animationDelay: '0.4s' }}>✈️ Paris</span>
+                      <span className="hero-globe-tag" style={{ bottom: '28%', left: '6%', animationDelay: '0.8s' }}>🌴 Bali</span>
+                      <span className="hero-globe-tag" style={{ bottom: '18%', right: '10%', animationDelay: '1.2s' }}>🏔️ Gokarna</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
 
@@ -475,6 +499,15 @@ function TripDashboard({
     1600,
     900
   );
+
+  // 3D scroll reveal for activity items
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const cleanup = initScrollReveal('.activity-item');
+      return cleanup;
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [tripData]);
 
   return (
     <div style={{ animation: 'fadeIn 0.5s ease' }}>
