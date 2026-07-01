@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { useDestinationImage } from '../hooks/useDestinationImage';
 import type { FullTripItinerary, Activity } from '../types/travel';
+import { generateIcsFile, triggerIcsDownload } from '../utils/calendar';
 
 interface TimelineProps {
   tripData: FullTripItinerary;
@@ -47,6 +48,26 @@ export default function ItineraryTimeline({ tripData, onUpdateTripData }: Timeli
       ...prev,
       [id]: !prev[id],
     }));
+  };
+
+  // Calendar Export States
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exportStartDate, setExportStartDate] = useState(() => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return tomorrow.toISOString().split('T')[0];
+  });
+
+  const handleExportCalendar = () => {
+    if (!exportStartDate) return;
+    try {
+      const icsData = generateIcsFile(tripData, exportStartDate);
+      triggerIcsDownload(tripData.metadata.destination, icsData);
+      setShowExportModal(false);
+    } catch (err) {
+      console.error('Failed to export calendar:', err);
+      alert('Failed to generate calendar. Please try again.');
+    }
   };
 
   // Inline edit state
@@ -205,31 +226,43 @@ export default function ItineraryTimeline({ tripData, onUpdateTripData }: Timeli
 
   return (
     <div className="timeline-container">
-      {/* Day Selector Tabs */}
-      <div className="day-tabs-container no-print">
-        <button
-          className={`day-tab-btn ${activeDayNumber === 'all' ? 'active' : ''}`}
-          onClick={() => {
-            setActiveDayNumber('all');
-            setIsAdding(false);
-            setEditingId(null);
-          }}
-        >
-          Show All Days
-        </button>
-        {tripData.itinerary.map((day) => (
+      {/* Timeline Header Row */}
+      <div className="timeline-header no-print">
+        {/* Day Selector Tabs */}
+        <div className="day-tabs-container">
           <button
-            key={day.dayNumber}
-            className={`day-tab-btn ${activeDayNumber === day.dayNumber ? 'active' : ''}`}
+            className={`day-tab-btn ${activeDayNumber === 'all' ? 'active' : ''}`}
             onClick={() => {
-              setActiveDayNumber(day.dayNumber);
+              setActiveDayNumber('all');
               setIsAdding(false);
               setEditingId(null);
             }}
           >
-            Day {day.dayNumber}
+            Show All Days
           </button>
-        ))}
+          {tripData.itinerary.map((day) => (
+            <button
+              key={day.dayNumber}
+              className={`day-tab-btn ${activeDayNumber === day.dayNumber ? 'active' : ''}`}
+              onClick={() => {
+                setActiveDayNumber(day.dayNumber);
+                setIsAdding(false);
+                setEditingId(null);
+              }}
+            >
+              Day {day.dayNumber}
+            </button>
+          ))}
+        </div>
+
+        {/* Calendar Export Button */}
+        <button
+          className="export-calendar-btn"
+          onClick={() => setShowExportModal(true)}
+          title="Export itinerary to Google/Apple Calendar"
+        >
+          📅 Export to Calendar
+        </button>
       </div>
 
       <div className="timeline-scroll">
@@ -662,6 +695,42 @@ export default function ItineraryTimeline({ tripData, onUpdateTripData }: Timeli
           <p className="local-tip-text">{tripData.localTransportAdvice}</p>
         </div>
       </div>
+
+      {/* Calendar Export Modal */}
+      {showExportModal && (
+        <div className="calendar-modal-overlay">
+          <div className="calendar-modal">
+            <div className="calendar-modal-header">
+              <h3>📅 Export to Calendar</h3>
+              <button className="calendar-modal-close" onClick={() => setShowExportModal(false)}>✕</button>
+            </div>
+            <div className="calendar-modal-body">
+              <p>
+                Set the start date for your trip to <strong>{tripData.metadata.destination}</strong>. 
+                All itinerary days will be scheduled consecutively starting from this date.
+              </p>
+              <div className="calendar-date-input-group">
+                <label htmlFor="calendar-start-date">Trip Start Date</label>
+                <input
+                  type="date"
+                  id="calendar-start-date"
+                  value={exportStartDate}
+                  onChange={(e) => setExportStartDate(e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+            <div className="calendar-modal-footer">
+              <button className="calendar-modal-cancel" onClick={() => setShowExportModal(false)}>
+                Cancel
+              </button>
+              <button className="calendar-modal-submit" onClick={handleExportCalendar}>
+                Download Calendar File
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
