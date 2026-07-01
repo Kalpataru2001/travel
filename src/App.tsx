@@ -400,10 +400,14 @@ function App() {
             {/* 1. Landing / Form — no trip, not loading, no shared views loading/errored */}
             {!tripData && !isLoading && !isSharedLoading && !sharedError && (
               <div className="landing-hero">
-                {/* ── Split layout: text+form LEFT, 3D globe RIGHT ── */}
-                <div className="hero-split">
-                  {/* Left: Text + Form */}
-                  <div className="hero-left">
+                {/* ── Full-width 3D globe fills the entire hero ── */}
+                <div className="hero-globe-bg">
+                  <HeroScene />
+                </div>
+
+                {/* ── Overlay: Left content panel ── */}
+                <div className="hero-overlay">
+                  <div className="hero-content-panel">
                     <div className="hero-badge">✈️ AI-Powered Travel Planner</div>
                     <h1 className="hero-title">
                       Your Next<br />
@@ -414,25 +418,25 @@ function App() {
                     </p>
                     <TripPlannerForm onSubmit={handleFormSubmit} />
                     {error && (
-                      <div className="error-banner" style={{ maxWidth: 680, marginTop: 16 }}>
+                      <div className="error-banner" style={{ marginTop: 16 }}>
                         ⚠️ {error}
                       </div>
                     )}
                   </div>
 
-                  {/* Right: Three.js 3D Globe */}
-                  <div className="hero-right">
-                    <HeroScene />
-                    <div className="hero-globe-labels">
-                      <span className="hero-globe-tag" style={{ top: '18%', left: '12%', animationDelay: '0s' }}>🗺️ Tokyo</span>
-                      <span className="hero-globe-tag" style={{ top: '30%', right: '8%', animationDelay: '0.4s' }}>✈️ Paris</span>
-                      <span className="hero-globe-tag" style={{ bottom: '28%', left: '6%', animationDelay: '0.8s' }}>🌴 Bali</span>
-                      <span className="hero-globe-tag" style={{ bottom: '18%', right: '10%', animationDelay: '1.2s' }}>🏔️ Gokarna</span>
-                    </div>
+                  {/* Floating destination tags — right side, over the globe */}
+                  <div className="hero-tags-panel">
+                    <span className="hero-globe-tag" style={{ animationDelay: '0s' }}>🗺️ Tokyo</span>
+                    <span className="hero-globe-tag" style={{ animationDelay: '0.5s' }}>✈️ Paris</span>
+                    <span className="hero-globe-tag" style={{ animationDelay: '1s' }}>🌴 Bali</span>
+                    <span className="hero-globe-tag" style={{ animationDelay: '1.5s' }}>🏔️ Dubai</span>
+                    <span className="hero-globe-tag" style={{ animationDelay: '2s' }}>🗽 New York</span>
+                    <span className="hero-globe-tag" style={{ animationDelay: '0.3s' }}>🌸 Kyoto</span>
                   </div>
                 </div>
               </div>
             )}
+
 
             {/* 2. Loading State */}
             {isLoading && (

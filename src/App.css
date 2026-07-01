@@ -5677,112 +5677,120 @@ input[type="range"] {
 }
 
 /* ============================================================
-   HERO SPLIT LAYOUT
-   Left: text + form   |   Right: Three.js globe
+   HERO — Full-screen globe background with overlay content
    ============================================================ */
 .landing-hero {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  padding: 20px 0 40px;
-  animation: fadeIn 0.6s ease;
-  width: 100%;
-}
-
-.hero-split {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 40px;
-  align-items: center;
-  width: 100%;
-  min-height: 88vh;
-  padding: 20px 0;
-}
-
-.hero-left {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  text-align: left;
-  padding-right: 16px;
-}
-
-.hero-left .hero-badge {
-  margin-bottom: 20px;
-  animation: stampIn 0.6s ease 0.1s both;
-}
-
-.hero-left .hero-title {
-  text-align: left;
-  animation: heroTitleReveal 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.2s both;
-}
-
-.hero-left .hero-subtitle {
-  text-align: left;
-  animation: fadeIn 0.6s ease 0.4s both;
-}
-
-/* ── 3D Scene container ── */
-.hero-right {
+  /* Break out of app-content padding — extend edge-to-edge */
   position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 580px;
-  animation: sceneEntrance 1s cubic-bezier(0.22, 1, 0.36, 1) 0.3s both;
+  margin: -32px -40px 0;
+  width: calc(100% + 80px);
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+/* Globe fills the entire hero */
+.hero-globe-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
 }
 
 .hero-3d-scene {
   width: 100%;
   height: 100%;
-  position: relative;
-  border-radius: var(--radius-xl);
-  overflow: hidden;
+  display: block;
 }
 
-/* Subtle glow ring behind the globe */
-.hero-right::before {
+/* Gradient vignette: dark left edge for text legibility */
+.hero-globe-bg::after {
   content: '';
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 70%;
-  height: 70%;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(14,165,233,0.12) 0%, transparent 70%);
-  animation: orbPulse 4s ease-in-out infinite;
+  inset: 0;
+  background:
+    linear-gradient(to right,
+      rgba(8, 15, 40, 0.92) 0%,
+      rgba(8, 15, 40, 0.72) 38%,
+      rgba(8, 15, 40, 0.15) 60%,
+      transparent 100%
+    ),
+    linear-gradient(to bottom,
+      rgba(8, 15, 40, 0.5) 0%,
+      transparent 20%,
+      transparent 80%,
+      rgba(8, 15, 40, 0.6) 100%
+    );
   pointer-events: none;
-  z-index: 0;
+  z-index: 1;
 }
 
-/* ── Floating destination tags ── */
-.hero-globe-labels {
-  position: absolute;
-  inset: 0;
+/* Overlay layer that sits above the globe */
+.hero-overlay {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  min-height: 100vh;
+  padding: 100px 60px 60px;
+  gap: 40px;
+}
+
+/* Left: glassmorphism content panel */
+.hero-content-panel {
+  flex: 0 0 auto;
+  width: min(580px, 52%);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.hero-content-panel .hero-badge {
+  margin-bottom: 20px;
+  animation: stampIn 0.6s ease 0.1s both;
+}
+
+.hero-content-panel .hero-title {
+  text-align: left;
+  animation: heroTitleReveal 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.2s both;
+  margin-bottom: 16px;
+}
+
+.hero-content-panel .hero-subtitle {
+  text-align: left;
+  animation: fadeIn 0.6s ease 0.4s both;
+  margin-bottom: 32px;
+}
+
+/* Tags float in a vertical stack on the right side of the overlay */
+.hero-tags-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 14px;
+  padding-right: 20px;
   pointer-events: none;
 }
 
 .hero-globe-tag {
-  position: absolute;
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 5px 12px;
-  background: rgba(8, 20, 48, 0.75);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(14, 165, 233, 0.3);
+  gap: 7px;
+  padding: 7px 16px;
+  background: rgba(6, 18, 44, 0.72);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(14, 165, 233, 0.32);
   border-radius: var(--radius-pill);
   color: #e0f2fe;
-  font-size: 0.75rem;
+  font-size: 0.82rem;
   font-weight: 700;
   letter-spacing: 0.3px;
   white-space: nowrap;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.08);
   animation: tagFloat 3.5s ease-in-out infinite;
-  z-index: 2;
 }
+
 
 /* ============================================================
    NAVBAR — Shimmer line effect on page load
@@ -6152,63 +6160,61 @@ input[type="range"] {
 }
 
 /* ============================================================
-   RESPONSIVE — 3D hero layout
+   RESPONSIVE — fullscreen hero
    ============================================================ */
 @media (max-width: 1100px) {
-  .hero-split {
-    grid-template-columns: 1fr;
+  .landing-hero {
+    margin: -24px -20px 0;
+    width: calc(100% + 40px);
+  }
+
+  .hero-overlay {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 90px 28px 48px;
     gap: 24px;
-    min-height: auto;
-    padding: 0;
   }
 
-  .hero-left {
-    align-items: center;
-    text-align: center;
+  .hero-content-panel {
+    width: 100%;
+    max-width: 600px;
+  }
+
+  .hero-tags-panel {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: flex-start;
     padding-right: 0;
-    order: 1;
-  }
-
-  .hero-left .hero-title,
-  .hero-left .hero-subtitle {
-    text-align: center;
-  }
-
-  .hero-right {
-    height: 420px;
-    order: 0;
-  }
-
-  .hero-right::before {
-    width: 60%;
-    height: 60%;
+    gap: 10px;
   }
 }
 
 @media (max-width: 768px) {
-  .hero-right {
-    height: 320px;
+  .landing-hero {
+    margin: -24px -16px 0;
+    width: calc(100% + 32px);
+  }
+
+  .hero-overlay {
+    padding: 80px 20px 40px;
   }
 
   .aurora-orb-1 { width: 80vw; height: 80vw; }
   .aurora-orb-2 { width: 70vw; height: 70vw; }
   .aurora-orb-3 { width: 55vw; height: 55vw; }
-
-  .hero-globe-tag {
-    font-size: 0.7rem;
-    padding: 4px 9px;
-  }
 }
 
 @media (max-width: 480px) {
-  .hero-right {
-    height: 260px;
-  }
-
-  .hero-globe-tag {
+  .hero-tags-panel {
     display: none;
   }
+
+  .hero-overlay {
+    padding: 72px 16px 32px;
+  }
 }
+
 
 /* Reduce motion: disable all non-essential animations */
 @media (prefers-reduced-motion: reduce) {
