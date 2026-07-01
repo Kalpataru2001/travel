@@ -1,7 +1,8 @@
 // src/components/LanguagePhrasebook.tsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { FullTripItinerary } from '../types/travel';
 import { speakPhrase, getFallbackLanguageDetails } from '../utils/language';
+import { initScrollReveal } from '../utils/animations';
 
 interface LanguagePhrasebookProps {
   tripData: FullTripItinerary;
@@ -9,6 +10,12 @@ interface LanguagePhrasebookProps {
 
 export default function LanguagePhrasebook({ tripData }: LanguagePhrasebookProps) {
   const [playingIdx, setPlayingIdx] = useState<number | null>(null);
+
+  // Scroll-reveal phrase items
+  useEffect(() => {
+    const timer = setTimeout(() => initScrollReveal('.phrase-item, .phrase-card'), 200);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Retrieve dynamic or fallback language details
   const fallback = getFallbackLanguageDetails(tripData.metadata.destination);

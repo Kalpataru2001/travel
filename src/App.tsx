@@ -1,6 +1,7 @@
 // src/App.tsx
 import { useState, useEffect } from 'react';
 import './App.css';
+import './styles/3d-pages.css';
 import TravelMap from './components/TravelMap';
 import ItineraryTimeline from './components/ItineraryTimeline';
 import TripPlannerForm from './components/TripPlannerForm';

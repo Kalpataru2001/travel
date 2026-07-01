@@ -1,8 +1,9 @@
 // src/components/ItineraryTimeline.tsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useDestinationImage } from '../hooks/useDestinationImage';
 import type { FullTripItinerary, Activity } from '../types/travel';
 import { generateIcsFile, triggerIcsDownload } from '../utils/calendar';
+import { initScrollReveal } from '../utils/animations';
 
 interface TimelineProps {
   tripData: FullTripItinerary;
@@ -42,6 +43,12 @@ function ActivityImage({ activity }: { activity: Activity }) {
 export default function ItineraryTimeline({ tripData, onUpdateTripData }: TimelineProps) {
   const [activeDayNumber, setActiveDayNumber] = useState<number | 'all'>(1);
   const [expandedFoodIds, setExpandedFoodIds] = useState<Record<string, boolean>>({});
+
+  // 3D scroll-reveal for activity items
+  useEffect(() => {
+    const timer = setTimeout(() => initScrollReveal('.activity-item'), 300);
+    return () => clearTimeout(timer);
+  }, [activeDayNumber, tripData]);
 
   const toggleFoodExpand = (id: string) => {
     setExpandedFoodIds((prev) => ({

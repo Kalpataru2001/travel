@@ -4,6 +4,7 @@ import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '../utils/firebase';
 import type { FullTripItinerary, TripQuery } from '../types/travel';
 import { POPULAR_CURRENCIES } from '../utils/currency';
+import { initTiltCards } from '../utils/animations';
 
 interface UserProfileProps {
   onBackToPlanner: () => void;
@@ -55,6 +56,11 @@ export default function UserProfile({ onBackToPlanner }: UserProfileProps) {
     } else {
       setPreferredVibes(['Adventure']);
     }
+
+    // 3D tilt on profile cards and stat boxes
+    const cleanupCards = initTiltCards('.profile-card', { maxTilt: 5, glowColor: 'rgba(14,165,233,0.14)' });
+    const cleanupStats = initTiltCards('.dashboard-stat-box', { maxTilt: 12, perspective: 500, glowColor: 'rgba(14,165,233,0.2)' });
+    return () => { cleanupCards(); cleanupStats(); };
   }, []);
 
   const handleToggleVibe = (vibe: TripQuery['travelStyle']) => {

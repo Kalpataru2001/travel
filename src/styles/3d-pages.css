@@ -1,0 +1,804 @@
+/* ============================================================
+   3D ENHANCEMENTS — ALL PAGES
+   Append to App.css
+   ============================================================ */
+
+/* ────────────────────────────────────────────────────────────
+   FIX: Travel Vibe style-grid — wrap on smaller containers
+   ──────────────────────────────────────────────────────────── */
+.style-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+}
+
+/* When inside the overlay form panel which can be narrow */
+.hero-content-panel .style-grid,
+.form-card .style-grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.style-card {
+  min-width: 0;
+  padding: 10px 4px;
+  font-size: 0.7rem;
+  word-break: break-word;
+  text-align: center;
+  transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1),
+              box-shadow 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+  transform-style: preserve-3d;
+  perspective: 600px;
+}
+
+.style-card-emoji {
+  font-size: 1.4rem;
+  display: block;
+  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+.style-card:hover .style-card-emoji {
+  transform: scale(1.25) translateY(-3px);
+}
+
+.style-card:hover {
+  transform: perspective(600px) translateZ(12px) rotateX(-5deg);
+  box-shadow: 0 14px 28px rgba(0,0,0,0.3), 0 0 12px rgba(14,165,233,0.15);
+  background: rgba(255,255,255,0.1);
+  border-color: rgba(255,255,255,0.25);
+  color: white;
+}
+
+.style-card.selected {
+  background: linear-gradient(135deg,rgba(14,165,233,0.22),rgba(16,185,129,0.22));
+  border-color: var(--primary);
+  color: white;
+  box-shadow: 0 0 20px rgba(14,165,233,0.25);
+  animation: stampIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+.style-card.selected .style-card-emoji {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* ─── Responsive: 2-row layout on very narrow containers ─── */
+@media (max-width: 520px) {
+  .style-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* ────────────────────────────────────────────────────────────
+   NEW KEYFRAMES for page animations
+   ──────────────────────────────────────────────────────────── */
+@keyframes slideUpFade {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes countUp {
+  from { opacity: 0; transform: scale(0.7) translateY(6px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes barGrow {
+  from { width: 0 !important; }
+  to   { /* width set inline */ }
+}
+
+@keyframes shimmerBar {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+@keyframes popIn {
+  0%   { transform: scale(0.8) rotate(-4deg); opacity: 0; }
+  70%  { transform: scale(1.06) rotate(1deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0); opacity: 1; }
+}
+
+@keyframes widgetEntrance {
+  from { opacity: 0; transform: perspective(800px) rotateY(-12deg) translateX(-20px); }
+  to   { opacity: 1; transform: perspective(800px) rotateY(0) translateX(0); }
+}
+
+@keyframes cardFlip {
+  0%   { transform: perspective(600px) rotateX(15deg) translateY(20px); opacity: 0; }
+  100% { transform: perspective(600px) rotateX(0) translateY(0); opacity: 1; }
+}
+
+/* ────────────────────────────────────────────────────────────
+   MY TRIPS PAGE — 3D Cards
+   ──────────────────────────────────────────────────────────── */
+.trips-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
+  perspective: 1200px;
+}
+
+.trip-card {
+  transform-style: preserve-3d;
+  transition: border-color 0.25s ease, box-shadow 0.3s ease;
+  animation: cardFlip 0.55s cubic-bezier(0.22,1,0.36,1) both;
+  position: relative;
+}
+
+/* Stagger card animation delays */
+.trip-card:nth-child(1) { animation-delay: 0.05s; }
+.trip-card:nth-child(2) { animation-delay: 0.12s; }
+.trip-card:nth-child(3) { animation-delay: 0.19s; }
+.trip-card:nth-child(4) { animation-delay: 0.26s; }
+.trip-card:nth-child(5) { animation-delay: 0.33s; }
+.trip-card:nth-child(6) { animation-delay: 0.40s; }
+
+/* Glinting shimmer overlay on hover */
+.trip-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.07) 50%, transparent 60%);
+  background-size: 200% 100%;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.trip-card:hover::before {
+  opacity: 1;
+  animation: shimmerBar 1.2s ease;
+}
+
+.trip-card-header {
+  position: relative;
+  height: 140px;
+  background: linear-gradient(135deg, #0c2340, #1a4a7a);
+  display: flex;
+  align-items: flex-end;
+  padding: 20px;
+  overflow: hidden;
+  transition: background 0.4s ease;
+}
+
+/* Large emoji watermark that rotates gently */
+.trip-card-header::after {
+  content: '✈';
+  position: absolute;
+  top: 10px;
+  right: 16px;
+  font-size: 2.8rem;
+  opacity: 0.1;
+  transition: transform 0.5s ease, opacity 0.3s ease;
+}
+
+.trip-card:hover .trip-card-header::after {
+  transform: rotate(15deg) scale(1.15);
+  opacity: 0.2;
+}
+
+.view-trip-btn {
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.25s ease;
+}
+
+.view-trip-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+  transform: translateX(-100%);
+  transition: transform 0.4s ease;
+}
+
+.view-trip-btn:hover::after {
+  transform: translateX(100%);
+}
+
+.view-trip-btn:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 8px 20px rgba(14,165,233,0.4);
+}
+
+/* ────────────────────────────────────────────────────────────
+   PROFILE PAGE — 3D stat boxes, profile cards, progress bars
+   ──────────────────────────────────────────────────────────── */
+.profile-card {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  transition: transform 0.35s cubic-bezier(0.22,1,0.36,1), box-shadow 0.35s ease;
+  transform-style: preserve-3d;
+  animation: slideUpFade 0.6s ease both;
+}
+
+.profile-card:nth-child(1) { animation-delay: 0.1s; }
+.profile-card:nth-child(2) { animation-delay: 0.22s; }
+
+.profile-card:hover {
+  transform: perspective(1000px) rotateX(-1.5deg) rotateY(1.5deg) translateY(-4px);
+  box-shadow: 0 24px 48px rgba(0,0,0,0.35), 0 0 24px rgba(14,165,233,0.1);
+  border-color: rgba(14,165,233,0.25);
+}
+
+/* Avatar — 3D ring pulse */
+.profile-large-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 3px solid var(--primary);
+  box-shadow: 0 0 0 5px rgba(14,165,233,0.15), 0 0 0 10px rgba(14,165,233,0.07);
+  transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.4s ease;
+  display: block;
+}
+
+.profile-large-avatar:hover {
+  transform: scale(1.08) rotate(-3deg);
+  box-shadow: 0 0 0 6px rgba(14,165,233,0.3), 0 0 28px rgba(14,165,233,0.35);
+}
+
+/* Stat boxes — 3D lift */
+.dashboard-stat-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 20px 16px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: var(--radius-md);
+  text-align: center;
+  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.3s ease, border-color 0.3s ease;
+  animation: countUp 0.5s ease both;
+  cursor: default;
+  transform-style: preserve-3d;
+}
+
+.dashboard-stat-box:nth-child(1) { animation-delay: 0.15s; }
+.dashboard-stat-box:nth-child(2) { animation-delay: 0.28s; }
+.dashboard-stat-box:nth-child(3) { animation-delay: 0.41s; }
+
+.dashboard-stat-box:hover {
+  transform: perspective(500px) translateZ(14px) translateY(-4px);
+  box-shadow: 0 16px 32px rgba(0,0,0,0.3), 0 0 16px rgba(14,165,233,0.18);
+  border-color: rgba(14,165,233,0.35);
+}
+
+.stat-box-emoji {
+  font-size: 1.8rem;
+  display: block;
+  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+.dashboard-stat-box:hover .stat-box-emoji {
+  transform: scale(1.2) translateY(-4px);
+}
+
+.stat-box-value {
+  font-size: 1.7rem;
+  font-weight: 800;
+  color: white;
+  letter-spacing: -0.5px;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.stat-box-label {
+  font-size: 0.75rem;
+  color: var(--text-white-muted);
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+/* Progress bars — animated width + shimmer */
+.progress-item-bar-bg {
+  height: 8px;
+  background: rgba(255,255,255,0.08);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+.progress-item-bar-fill {
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(90deg, var(--primary), var(--accent));
+  background-size: 200% 100%;
+  animation: barGrow 1s cubic-bezier(0.22,1,0.36,1) both, shimmerBar 3s linear infinite;
+  transition: width 0.6s cubic-bezier(0.22,1,0.36,1);
+}
+
+.fill-adventure { background: linear-gradient(90deg, #0ea5e9, #38bdf8); }
+.fill-relaxation { background: linear-gradient(90deg, #10b981, #34d399); }
+.fill-culture { background: linear-gradient(90deg, #a78bfa, #c084fc); }
+.fill-luxury { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+.fill-budget { background: linear-gradient(90deg, #fb7185, #f43f5e); }
+
+/* Destination badges — pop-in stagger */
+.profile-dest-badge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 12px;
+  background: rgba(14,165,233,0.12);
+  border: 1px solid rgba(14,165,233,0.25);
+  border-radius: var(--radius-pill);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #7dd3fc;
+  transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s ease, background 0.2s ease;
+  animation: popIn 0.4s ease both;
+  cursor: default;
+}
+
+.profile-dest-badge-pill:hover {
+  transform: translateY(-3px) scale(1.05);
+  background: rgba(14,165,233,0.22);
+  box-shadow: 0 6px 16px rgba(14,165,233,0.25);
+}
+
+/* Vibe pill buttons */
+.profile-vibe-pill-btn {
+  padding: 8px 16px;
+  border-radius: var(--radius-pill);
+  border: 1px solid rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.06);
+  color: var(--text-white-muted);
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.25s ease,
+              background 0.25s ease, border-color 0.25s ease, color 0.25s ease;
+}
+
+.profile-vibe-pill-btn:hover {
+  transform: translateY(-3px) scale(1.06);
+  background: rgba(255,255,255,0.12);
+  color: white;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.2);
+}
+
+.profile-vibe-pill-btn.selected {
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  border-color: transparent;
+  color: white;
+  box-shadow: 0 4px 14px rgba(14,165,233,0.4);
+  animation: stampIn 0.35s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+/* Save preferences button */
+.profile-save-btn {
+  padding: 12px 28px;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  width: 100%;
+  margin-top: 8px;
+  transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.25s ease;
+  animation: ctaGlow 3s ease-in-out infinite;
+}
+
+.profile-save-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px rgba(14,165,233,0.45);
+}
+
+/* ────────────────────────────────────────────────────────────
+   WEATHER WIDGET — 3D glassmorphism panel entrance
+   ──────────────────────────────────────────────────────────── */
+.weather-widget {
+  background: linear-gradient(135deg, rgba(14,165,233,0.12), rgba(16,185,129,0.08));
+  border: 1px solid rgba(14,165,233,0.2);
+  border-radius: var(--radius-lg);
+  padding: 20px 24px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition: transform 0.35s cubic-bezier(0.22,1,0.36,1), box-shadow 0.35s ease;
+  animation: widgetEntrance 0.7s cubic-bezier(0.22,1,0.36,1) 0.1s both;
+  transform-style: preserve-3d;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Shimmer sweep on load */
+.weather-widget::before {
+  content: '';
+  position: absolute;
+  top: -60%;
+  left: -60%;
+  width: 60%;
+  height: 220%;
+  background: linear-gradient(105deg, transparent, rgba(255,255,255,0.06), transparent);
+  transform: rotate(15deg);
+  animation: navShimmer 2s ease 0.8s both;
+  pointer-events: none;
+}
+
+.weather-widget:hover {
+  transform: perspective(900px) rotateX(-2deg) rotateY(2deg) translateY(-4px);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.3), 0 0 20px rgba(14,165,233,0.15);
+  border-color: rgba(14,165,233,0.4);
+}
+
+/* Temperature value pop */
+.weather-temp {
+  font-size: 2.8rem;
+  font-weight: 800;
+  color: white;
+  letter-spacing: -1px;
+  animation: countUp 0.6s ease 0.3s both;
+  display: inline-block;
+}
+
+/* ────────────────────────────────────────────────────────────
+   CURRENCY CONVERTER — 3D panel entrance
+   ──────────────────────────────────────────────────────────── */
+.currency-section {
+  background: linear-gradient(135deg, rgba(245,158,11,0.1), rgba(251,191,36,0.06));
+  border: 1px solid rgba(245,158,11,0.2);
+  border-radius: var(--radius-lg);
+  padding: 20px 24px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition: transform 0.35s cubic-bezier(0.22,1,0.36,1), box-shadow 0.35s ease;
+  animation: widgetEntrance 0.7s cubic-bezier(0.22,1,0.36,1) 0.2s both;
+  transform-style: preserve-3d;
+}
+
+.currency-section:hover {
+  transform: perspective(900px) rotateX(-2deg) rotateY(-2deg) translateY(-4px);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.3), 0 0 20px rgba(245,158,11,0.15);
+  border-color: rgba(245,158,11,0.4);
+}
+
+/* ────────────────────────────────────────────────────────────
+   BUDGET TRACKER — KPI cards 3D, chart panel
+   ──────────────────────────────────────────────────────────── */
+.budget-section {
+  margin-top: 32px;
+  animation: slideUpFade 0.6s ease both;
+}
+
+/* KPI value cards */
+.budget-kpi-card {
+  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.3s ease;
+  transform-style: preserve-3d;
+  animation: countUp 0.5s ease both;
+}
+
+.budget-kpi-card:nth-child(1) { animation-delay: 0.1s; }
+.budget-kpi-card:nth-child(2) { animation-delay: 0.2s; }
+.budget-kpi-card:nth-child(3) { animation-delay: 0.3s; }
+.budget-kpi-card:nth-child(4) { animation-delay: 0.4s; }
+
+.budget-kpi-card:hover {
+  transform: perspective(600px) translateZ(12px) translateY(-5px);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.35), 0 0 20px rgba(14,165,233,0.14);
+}
+
+.kpi-icon {
+  font-size: 1.6rem;
+  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  display: block;
+}
+
+.budget-kpi-card:hover .kpi-icon {
+  transform: scale(1.2) translateY(-4px);
+}
+
+.kpi-value {
+  font-size: 1.5rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, white, rgba(255,255,255,0.75));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ────────────────────────────────────────────────────────────
+   PACKING LIST — Checkbox items reveal + category headers
+   ──────────────────────────────────────────────────────────── */
+.packing-list-section {
+  animation: slideUpFade 0.6s ease 0.1s both;
+}
+
+.packing-item-row {
+  transition: transform 0.2s ease, background 0.2s ease;
+  border-radius: 8px;
+}
+
+.packing-item-row:hover {
+  transform: translateX(4px);
+  background: rgba(255,255,255,0.04);
+}
+
+/* Checkbox — spring scale on check */
+.packing-checkbox-input {
+  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.25s ease;
+  cursor: pointer;
+}
+
+.packing-checkbox-input:checked {
+  animation: stampIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+/* Column headers */
+.packing-column-header {
+  position: relative;
+  overflow: hidden;
+}
+
+.packing-column-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--primary), var(--accent));
+  transition: width 0.4s ease;
+}
+
+.packing-column:hover .packing-column-header::after {
+  width: 100%;
+}
+
+/* ────────────────────────────────────────────────────────────
+   LANGUAGE PHRASEBOOK — Phrase cards 3D flip-reveal
+   ──────────────────────────────────────────────────────────── */
+.phrase-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+  perspective: 1000px;
+}
+
+.phrase-item,
+.phrase-card {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.09);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1),
+              box-shadow 0.3s ease, border-color 0.3s ease;
+  transform-style: preserve-3d;
+  animation: cardFlip 0.5s ease both;
+  position: relative;
+  overflow: hidden;
+}
+
+.phrase-item::before,
+.phrase-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 60%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.phrase-item:hover::before,
+.phrase-card:hover::before {
+  opacity: 1;
+}
+
+.phrase-item:hover,
+.phrase-card:hover {
+  transform: perspective(700px) rotateX(-5deg) translateY(-5px) translateZ(8px);
+  box-shadow: 0 16px 32px rgba(0,0,0,0.3), 0 0 16px rgba(14,165,233,0.1);
+  border-color: rgba(14,165,233,0.3);
+}
+
+/* Speaker button spring */
+.phrase-speaker-btn {
+  transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1),
+              background 0.25s ease, box-shadow 0.25s ease;
+}
+
+.phrase-speaker-btn:hover {
+  transform: scale(1.18) rotate(-5deg);
+  box-shadow: 0 4px 12px rgba(14,165,233,0.4);
+}
+
+.phrase-speaker-btn:active {
+  transform: scale(0.92);
+}
+
+/* ────────────────────────────────────────────────────────────
+   ITINERARY — Day header badge 3D pop, activity card reveal
+   ──────────────────────────────────────────────────────────── */
+.day-group {
+  animation: slideUpFade 0.5s ease both;
+}
+
+.day-group:nth-child(1) { animation-delay: 0.05s; }
+.day-group:nth-child(2) { animation-delay: 0.12s; }
+.day-group:nth-child(3) { animation-delay: 0.19s; }
+.day-group:nth-child(4) { animation-delay: 0.26s; }
+.day-group:nth-child(5) { animation-delay: 0.33s; }
+.day-group:nth-child(6) { animation-delay: 0.40s; }
+
+.day-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 52px;
+  padding: 8px 14px;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  color: white;
+  border-radius: var(--radius-pill);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  box-shadow: 0 4px 12px rgba(14,165,233,0.35);
+  white-space: nowrap;
+  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.3s ease;
+  animation: stampIn 0.5s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+
+.day-badge:hover,
+.day-header:hover .day-badge {
+  transform: translateY(-3px) scale(1.06);
+  box-shadow: 0 8px 20px rgba(14,165,233,0.5);
+}
+
+/* Map panel — 3D hover */
+.map-panel {
+  position: sticky;
+  top: 90px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: 0 20px 48px rgba(0,0,0,0.35);
+  transition: box-shadow 0.35s ease, border-color 0.35s ease;
+}
+
+.map-panel:hover {
+  box-shadow: 0 28px 60px rgba(0,0,0,0.45), 0 0 24px rgba(14,165,233,0.1);
+  border-color: rgba(14,165,233,0.2);
+}
+
+/* Timeline panel — entrance */
+.timeline-panel {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: 0 20px 48px rgba(0,0,0,0.3);
+  animation: slideUpFade 0.5s ease 0.1s both;
+}
+
+/* ────────────────────────────────────────────────────────────
+   HOTEL CARDS — enhanced (re-affirm)
+   ──────────────────────────────────────────────────────────── */
+.hotels-section {
+  margin-top: 40px;
+  animation: slideUpFade 0.6s ease 0.15s both;
+}
+
+.hotel-card {
+  transform-style: preserve-3d;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.hotel-card-img {
+  transition: transform 0.6s cubic-bezier(0.22,1,0.36,1);
+}
+
+.hotel-card:hover .hotel-card-img {
+  transform: scale(1.07);
+}
+
+/* ────────────────────────────────────────────────────────────
+   TRAVEL ASSISTANT DRAWER — 3D slide entrance
+   ──────────────────────────────────────────────────────────── */
+.assistant-float-btn {
+  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1),
+              box-shadow 0.3s ease;
+  animation: glowPulse 3s ease-in-out infinite;
+}
+
+.assistant-float-btn:hover {
+  transform: scale(1.12) rotate(8deg);
+  box-shadow: 0 12px 28px rgba(14,165,233,0.55) !important;
+}
+
+.assistant-float-btn:active {
+  transform: scale(0.94);
+}
+
+/* ────────────────────────────────────────────────────────────
+   SHARED TRIP BANNER — entrance
+   ──────────────────────────────────────────────────────────── */
+.shared-trip-banner,
+.sync-alert-banner {
+  animation: slideDown 0.4s ease;
+}
+
+/* ────────────────────────────────────────────────────────────
+   BACK BUTTON — 3D press
+   ──────────────────────────────────────────────────────────── */
+.back-btn {
+  transition: transform 0.25s ease, background 0.25s ease;
+}
+
+.back-btn:hover {
+  transform: perspective(400px) translateZ(6px) translateX(-4px);
+  background: rgba(255,255,255,0.2);
+}
+
+.back-btn:active {
+  transform: translateX(-2px) scale(0.97);
+}
+
+/* ────────────────────────────────────────────────────────────
+   NAVBAR TABS — 3D lift on active/hover
+   ──────────────────────────────────────────────────────────── */
+.nav-tab {
+  transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1),
+              background 0.25s ease, box-shadow 0.25s ease, color 0.25s ease;
+}
+
+.nav-tab:not(.active):hover {
+  transform: translateY(-2px);
+  background: rgba(255,255,255,0.1);
+  color: white;
+}
+
+.nav-tab.active {
+  transform: translateY(-1px);
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  color: white;
+  box-shadow: 0 6px 18px rgba(14,165,233,0.4);
+}
+
+/* ────────────────────────────────────────────────────────────
+   RESPONSIVE — 3D for other pages
+   ──────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .profile-card:hover,
+  .dashboard-stat-box:hover,
+  .weather-widget:hover,
+  .currency-section:hover {
+    transform: translateY(-3px);
+  }
+
+  .phrase-item:hover,
+  .phrase-card:hover {
+    transform: translateY(-4px);
+  }
+}
+
+/* Reduced motion — honour user preferences */
+@media (prefers-reduced-motion: reduce) {
+  .trip-card,
+  .profile-card,
+  .dashboard-stat-box,
+  .weather-widget,
+  .currency-section,
+  .phrase-item,
+  .phrase-card,
+  .packing-item-row,
+  .day-group,
+  .day-badge,
+  .profile-dest-badge-pill,
+  .profile-vibe-pill-btn,
+  .assistant-float-btn {
+    animation: none !important;
+    transition: none !important;
+  }
+}
