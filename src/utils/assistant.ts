@@ -75,11 +75,23 @@ Instructions:
     systemInstruction,
   });
 
-  // Map history to the SDK parts format
-  const sdkHistory = history.map((msg) => ({
-    role: msg.role,
-    parts: [{ text: msg.text }],
-  }));
+  // Map history to SDK format, then strip any leading model messages.
+  // Gemini requires history to always start with a 'user' turn.
+  // We also exclude the last message (the current newMessage the user just sent)
+  // because it's delivered via chat.sendMessage() below.
+  const rawHistory = history
+    .filter((msg) => msg.text !== newMessage) // exclude the unsent current message if present
+    .map((msg) => ({
+      role: msg.role,
+      parts: [{ text: msg.text }],
+    }));
+
+  // Drop leading model turns so history always opens with a user turn
+  let startIdx = 0;
+  while (startIdx < rawHistory.length && rawHistory[startIdx].role !== 'user') {
+    startIdx++;
+  }
+  const sdkHistory = rawHistory.slice(startIdx);
 
   const chat = model.startChat({
     history: sdkHistory,
