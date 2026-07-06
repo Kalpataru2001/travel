@@ -1,8 +1,9 @@
 // src/components/BudgetTracker.tsx
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import type { FullTripItinerary, ExpenseItem } from '../types/travel';
 import { POPULAR_CURRENCIES, getFallbackRatesForBase } from '../utils/currency';
 import { generateDefaultBudget } from '../utils/budget';
+import { initTiltCards } from '../utils/animations';
 
 interface BudgetTrackerProps {
   tripData: FullTripItinerary;
@@ -111,6 +112,16 @@ export default function BudgetTracker({ tripData, onUpdateTripData }: BudgetTrac
   const [isCurrencyConverting, setIsCurrencyConverting] = useState(false);
   const [currencyDropdownOpen, setCurrencyDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // 3D tilt on KPI cards
+  useEffect(() => {
+    const cleanup = initTiltCards('.budget-kpi-card', {
+      maxTilt: 10,
+      perspective: 700,
+      glowColor: 'rgba(14,165,233,0.18)',
+    });
+    return cleanup;
+  }, [activeTab]);
 
   // ── Computed Totals ──
   const categoryTotals: Record<string, number> = {
