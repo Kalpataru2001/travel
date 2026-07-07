@@ -14,6 +14,18 @@ const TRAVEL_STYLES: { value: TripQuery['travelStyle']; emoji: string; label: st
   { value: 'Budget', emoji: '🎒', label: 'Budget' },
 ];
 
+/** Default start date: today + 7 days */
+function defaultStartDate(): string {
+  const d = new Date();
+  d.setDate(d.getDate() + 7);
+  return d.toISOString().split('T')[0];
+}
+
+/** Min date for the picker: today */
+function todayISO(): string {
+  return new Date().toISOString().split('T')[0];
+}
+
 export default function TripPlannerForm({ onSubmit }: FormProps) {
   const [startingPoint, setStartingPoint] = useState(
     () => localStorage.getItem('travel_profile_home_city') || localStorage.getItem('last_start') || ''
@@ -32,6 +44,9 @@ export default function TripPlannerForm({ onSubmit }: FormProps) {
   });
   const [duration, setDuration] = useState(
     () => Number(localStorage.getItem('last_duration')) || 3
+  );
+  const [startDate, setStartDate] = useState(
+    () => localStorage.getItem('last_start_date') || defaultStartDate()
   );
   const [travelStyles, setTravelStyles] = useState<TripQuery['travelStyle'][]>(() => {
     const cachedStyles = localStorage.getItem('last_styles');
@@ -89,13 +104,14 @@ export default function TripPlannerForm({ onSubmit }: FormProps) {
 
     localStorage.setItem('last_start', startingPoint);
     localStorage.setItem('last_destinations', JSON.stringify(filteredDestinations));
-    
+    localStorage.setItem('last_start_date', startDate);
+
     // Legacy fallback
     const fullDestString = filteredDestinations.join(' → ');
     localStorage.setItem('last_dest', fullDestString);
     localStorage.setItem('last_duration', duration.toString());
     localStorage.setItem('last_styles', JSON.stringify(travelStyles));
-    
+
     const primaryStyle = travelStyles[0] || 'Adventure';
     localStorage.setItem('last_style', primaryStyle);
 
@@ -106,6 +122,7 @@ export default function TripPlannerForm({ onSubmit }: FormProps) {
       travelStyle: travelStyles.join(', ') as any,
       travelStyles,
       startingPoint,
+      startDate,
     });
   };
 
@@ -192,6 +209,19 @@ export default function TripPlannerForm({ onSubmit }: FormProps) {
             <span>7 Days</span>
             <span>14 Days</span>
           </div>
+        </div>
+
+        {/* Trip Start Date */}
+        <div className="form-group">
+          <label className="form-label">📅 Trip Start Date</label>
+          <input
+            type="date"
+            value={startDate}
+            min={todayISO()}
+            onChange={(e) => setStartDate(e.target.value)}
+            className="form-input date-input"
+          />
+          <span className="form-input-hint">Used for countdown timer &amp; day-by-day calendar dates</span>
         </div>
 
         {/* Travel Style Cards */}

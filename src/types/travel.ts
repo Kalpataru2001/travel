@@ -7,6 +7,7 @@ export interface TripQuery {
   travelStyles?: ('Adventure' | 'Relaxation' | 'Budget' | 'Culture' | 'Luxury')[];
   startingPoint: string;
   destinations?: string[];
+  startDate?: string; // ISO date string e.g. "2025-08-15"
 }
 
 export interface RestaurantSuggestion {

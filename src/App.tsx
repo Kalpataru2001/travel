@@ -27,6 +27,9 @@ import { useDestinationImage } from './hooks/useDestinationImage';
 import UserProfile from './components/UserProfile';
 import HeroScene from './components/HeroScene';
 import { initScrollReveal } from './utils/animations';
+import TripCountdown from './components/TripCountdown';
+import VisaInfo from './components/VisaInfo';
+import EmergencyInfo from './components/EmergencyInfo';
 
 function App() {
   const [tripData, setTripData] = useState<FullTripItinerary | null>(null);
@@ -582,6 +585,15 @@ function TripDashboard({
                   </div>
         </div>
 
+        {/* Countdown Timer */}
+        <TripCountdown
+          startDate={tripData.metadata.startDate}
+          destination={tripData.metadata.destination}
+        />
+
+        {/* Visa Info Banner */}
+        <VisaInfo destination={tripData.metadata.destination} />
+
         {/* Widgets Grid: Weather & Currency */}
         <div className="widgets-grid no-print">
           <WeatherWidget
@@ -656,6 +668,9 @@ function TripDashboard({
           currentTemp={currentTemp}
           currentCondition={currentCondition}
         />
+
+        {/* Emergency Contacts */}
+        <EmergencyInfo destination={tripData.metadata.destination} />
 
         {/* AI Travel Assistant */}
         <TravelAssistant tripData={tripData} />
