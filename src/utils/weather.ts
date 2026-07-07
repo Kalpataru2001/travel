@@ -3,6 +3,7 @@
 export interface WeatherDay {
   date: string;          // e.g. "Mon"
   fullDate: string;      // e.g. "Jun 17"
+  isoDate: string;       // e.g. "2025-08-15" — used for date matching
   temp: number;          // Celsius
   tempMin: number;
   tempMax: number;
@@ -17,7 +18,7 @@ export interface WeatherData {
   city: string;
   country: string;
   current: WeatherDay;
-  forecast: WeatherDay[]; // next 4 days
+  forecast: WeatherDay[]; // next 4 days (raw from API)
   isMock?: boolean;
 }
 
@@ -44,6 +45,44 @@ export function getWindLabel(speed: number): string {
   if (speed < 12) return 'Moderate';
   if (speed < 20) return 'Strong';
   return 'Very strong';
+}
+
+/** Days between today and a target ISO date string (negative if past) */
+export function daysUntil(isoDate: string): number {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const target = new Date(isoDate);
+  target.setHours(0, 0, 0, 0);
+  return Math.round((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+}
+
+/**
+ * Find the forecast entry closest to the given ISO date.
+ * Returns null if the target date is beyond the forecast window (> 5 days)
+ * or if the weather data has no forecast entries.
+ */
+export function extractDayForecast(weather: WeatherData, targetISO: string): WeatherDay | null {
+  const days = daysUntil(targetISO);
+  if (days < 0 || days > 5) return null;
+
+  // Day 0 → current; Day 1–5 → scan forecast by isoDate
+  if (days === 0) return weather.current;
+
+  // Find closest forecast entry by isoDate
+  const target = new Date(targetISO);
+  target.setHours(0, 0, 0, 0);
+
+  let best: WeatherDay | null = null;
+  let bestDiff = Infinity;
+
+  for (const day of [weather.current, ...weather.forecast]) {
+    if (!day.isoDate) continue;
+    const d = new Date(day.isoDate);
+    d.setHours(0, 0, 0, 0);
+    const diff = Math.abs(d.getTime() - target.getTime());
+    if (diff < bestDiff) { bestDiff = diff; best = day; }
+  }
+  return best;
 }
 
 export function generateMockWeather(destination: string): WeatherData {
@@ -95,6 +134,7 @@ export function generateMockWeather(destination: string): WeatherData {
     return {
       date: d.toLocaleDateString('en-US', { weekday: 'short' }),
       fullDate: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      isoDate: d.toISOString().slice(0, 10),
       temp,
       tempMin,
       tempMax,
@@ -170,6 +210,7 @@ export async function fetchWeather(destination: string): Promise<WeatherData> {
       return {
         date: d.toLocaleDateString('en-US', { weekday: 'short' }),
         fullDate: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        isoDate: dateStr,
         temp: Math.round(midday.main.temp),
         tempMin: Math.round(Math.min(...temps)),
         tempMax: Math.round(Math.max(...temps)),

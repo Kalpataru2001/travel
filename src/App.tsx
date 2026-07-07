@@ -591,13 +591,18 @@ function TripDashboard({
           destination={tripData.metadata.destination}
         />
 
-        {/* Visa Info Banner */}
-        <VisaInfo destination={tripData.metadata.destination} />
+        {/* Visa Info Banner — context-aware passport country detection */}
+        <VisaInfo
+          destination={tripData.metadata.destination}
+          startingPoint={tripData.metadata.startingPoint}
+          homeCity={localStorage.getItem('travel_profile_home_city') ?? undefined}
+        />
 
         {/* Widgets Grid: Weather & Currency */}
         <div className="widgets-grid no-print">
           <WeatherWidget
             destination={tripData.metadata.destination}
+            startDate={tripData.metadata.startDate}
             onWeatherLoaded={(temp, cond) => {
               setCurrentTemp(temp);
               setCurrentCondition(cond);
