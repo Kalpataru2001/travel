@@ -7177,3 +7177,480 @@ input[type="range"] {
   color: rgba(251, 191, 36, 0.7);
   font-style: italic;
 }
+
+/* ============================================================
+   TRANSPORT GUIDE COMPONENT
+   ============================================================ */
+.tg-card {
+  background: linear-gradient(135deg, rgba(15,23,42,0.8) 0%, rgba(10,10,30,0.8) 100%);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  margin-bottom: 20px;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.tg-card:hover {
+  border-color: rgba(14,165,233,0.2);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+}
+
+.tg-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 20px 14px;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.tg-toggle-btn {
+  cursor: pointer;
+}
+
+.tg-icon {
+  font-size: 1.6rem;
+  flex-shrink: 0;
+}
+
+.tg-header-text {
+  flex: 1;
+}
+
+.tg-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: white;
+  margin: 0 0 3px;
+}
+
+.tg-subtitle {
+  font-size: 0.76rem;
+  color: rgba(255,255,255,0.45);
+  margin: 0;
+}
+
+.tg-chevron {
+  font-size: 1.4rem;
+  color: rgba(255,255,255,0.3);
+  transition: transform 0.25s ease;
+  transform: rotate(0deg);
+  flex-shrink: 0;
+}
+
+.tg-chevron.open {
+  transform: rotate(90deg);
+}
+
+/* Quick pills strip */
+.tg-quick-pills {
+  display: flex;
+  gap: 8px;
+  padding: 0 20px 16px;
+  flex-wrap: wrap;
+}
+
+.tg-quick-pill {
+  font-size: 0.72rem;
+  background: rgba(14,165,233,0.08);
+  border: 1px solid rgba(14,165,233,0.15);
+  border-radius: var(--radius-pill);
+  padding: 4px 12px;
+  color: rgba(255,255,255,0.6);
+  white-space: nowrap;
+}
+
+/* Expanded body */
+.tg-body {
+  border-top: 1px solid rgba(255,255,255,0.06);
+  padding: 18px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  animation: slideUpFade 0.25s ease;
+}
+
+.tg-section-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: rgba(255,255,255,0.55);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 0 0 12px;
+}
+
+/* Airport options */
+.tg-airport-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tg-airport-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: var(--radius-sm);
+  transition: background 0.2s ease;
+}
+
+.tg-airport-option:hover {
+  background: rgba(255,255,255,0.06);
+}
+
+.tg-airport-emoji {
+  font-size: 1.3rem;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.tg-airport-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.tg-airport-mode {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: white;
+}
+
+.tg-airport-notes {
+  font-size: 0.74rem;
+  color: rgba(255,255,255,0.45);
+  line-height: 1.4;
+}
+
+.tg-airport-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.tg-airport-duration {
+  font-size: 0.72rem;
+  color: rgba(255,255,255,0.5);
+  white-space: nowrap;
+}
+
+.tg-airport-cost {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #4ade80;
+  white-space: nowrap;
+}
+
+/* Local transport list */
+.tg-local-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tg-local-item {
+  display: flex;
+  gap: 8px;
+  font-size: 0.82rem;
+  color: rgba(255,255,255,0.7);
+  line-height: 1.5;
+}
+
+.tg-bullet {
+  color: var(--primary);
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* App badges */
+.tg-apps-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tg-app-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: var(--radius-sm);
+}
+
+.tg-app-emoji {
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.tg-app-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tg-app-name {
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: white;
+}
+
+.tg-app-note {
+  font-size: 0.72rem;
+  color: rgba(255,255,255,0.4);
+}
+
+.tg-app-type {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  flex-shrink: 0;
+}
+
+/* Tip cards */
+.tg-tips-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.tg-tip-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+.tg-tip-drive {
+  background: rgba(96,165,250,0.07);
+  border-color: rgba(96,165,250,0.15);
+}
+
+.tg-tip-taxi {
+  background: rgba(251,191,36,0.07);
+  border-color: rgba(251,191,36,0.15);
+}
+
+.tg-tip-icon {
+  font-size: 1.3rem;
+  flex-shrink: 0;
+}
+
+.tg-tip-label {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: rgba(255,255,255,0.4);
+  margin-bottom: 3px;
+}
+
+.tg-tip-text {
+  font-size: 0.78rem;
+  color: rgba(255,255,255,0.7);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Not found state */
+.tg-not-found {
+  padding: 20px;
+}
+
+.tg-search-btn {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 8px 16px;
+  background: rgba(14,165,233,0.1);
+  border: 1px solid rgba(14,165,233,0.2);
+  border-radius: var(--radius-pill);
+  color: var(--primary);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.2s ease;
+}
+
+.tg-search-btn:hover {
+  background: rgba(14,165,233,0.18);
+}
+
+@media (max-width: 640px) {
+  .tg-tips-row {
+    grid-template-columns: 1fr;
+  }
+  .tg-airport-option {
+    flex-wrap: wrap;
+  }
+  .tg-airport-meta {
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+  }
+}
+
+/* ============================================================
+   LOCAL EVENTS COMPONENT
+   ============================================================ */
+.le-card {
+  background: linear-gradient(135deg, rgba(15,23,42,0.8) 0%, rgba(10,10,30,0.8) 100%);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  margin-bottom: 20px;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.le-card:hover {
+  border-color: rgba(167,139,250,0.2);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+}
+
+.le-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 20px 14px;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.le-icon { font-size: 1.6rem; flex-shrink: 0; }
+
+.le-header-text { flex: 1; }
+
+.le-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: white;
+  margin: 0 0 3px;
+}
+
+.le-subtitle {
+  font-size: 0.76rem;
+  color: rgba(255,255,255,0.45);
+  margin: 0;
+}
+
+.le-chevron {
+  font-size: 1.4rem;
+  color: rgba(255,255,255,0.3);
+  transition: transform 0.25s ease;
+}
+
+.le-chevron.open { transform: rotate(90deg); }
+
+/* Highlight chips strip */
+.le-highlights {
+  display: flex;
+  gap: 8px;
+  padding: 0 20px 16px;
+  flex-wrap: wrap;
+}
+
+.le-highlight-chip {
+  font-size: 0.72rem;
+  border-radius: var(--radius-pill);
+  padding: 4px 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.le-chip-festival  { background: rgba(167,139,250,0.12); border: 1px solid rgba(167,139,250,0.25); color: #c4b5fd; }
+.le-chip-holiday   { background: rgba(251,191,36,0.10);  border: 1px solid rgba(251,191,36,0.25);  color: #fde68a; }
+.le-chip-season    { background: rgba(74,222,128,0.10);  border: 1px solid rgba(74,222,128,0.25);  color: #86efac; }
+.le-chip-warning   { background: rgba(248,113,113,0.10); border: 1px solid rgba(248,113,113,0.25); color: #fca5a5; }
+
+/* Expanded body */
+.le-body {
+  border-top: 1px solid rgba(255,255,255,0.06);
+  padding: 18px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  animation: slideUpFade 0.25s ease;
+}
+
+.le-event-card {
+  display: flex;
+  gap: 12px;
+  padding: 14px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255,255,255,0.06);
+  transition: background 0.2s ease;
+}
+
+.le-event-card:hover { background: rgba(255,255,255,0.04); }
+
+.le-event-card-festival { border-left: 3px solid rgba(167,139,250,0.5); }
+.le-event-card-holiday  { border-left: 3px solid rgba(251,191,36,0.5); }
+.le-event-card-season   { border-left: 3px solid rgba(74,222,128,0.5); }
+.le-event-card-warning  { border-left: 3px solid rgba(248,113,113,0.5); }
+
+.le-event-emoji { font-size: 1.5rem; flex-shrink: 0; margin-top: 1px; }
+
+.le-event-details { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+
+.le-event-name {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: white;
+}
+
+.le-event-desc {
+  font-size: 0.78rem;
+  color: rgba(255,255,255,0.55);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.le-event-impact {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #fbbf24;
+  margin: 2px 0 0;
+}
+
+.le-event-month {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: rgba(255,255,255,0.3);
+  text-transform: uppercase;
+  white-space: nowrap;
+  flex-shrink: 0;
+  align-self: flex-start;
+  margin-top: 3px;
+}
+
+.le-no-events {
+  text-align: center;
+  padding: 24px;
+  color: rgba(255,255,255,0.35);
+  font-size: 0.82rem;
+}
+
+@media (max-width: 480px) {
+  .le-event-card { flex-wrap: wrap; }
+  .le-event-month { order: -1; }
+}

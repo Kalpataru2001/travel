@@ -31,6 +31,8 @@ import TripCountdown from './components/TripCountdown';
 import VisaInfo from './components/VisaInfo';
 import EmergencyInfo from './components/EmergencyInfo';
 import OnboardingModal from './components/OnboardingModal';
+import LocalEvents from './components/LocalEvents';
+import TransportGuide from './components/TransportGuide';
 
 function App() {
   const [tripData, setTripData] = useState<FullTripItinerary | null>(null);
@@ -618,6 +620,16 @@ function TripDashboard({
           homeCity={localStorage.getItem('travel_profile_home_city') ?? undefined}
           nationality={localStorage.getItem('travel_profile_nationality') ?? undefined}
         />
+
+        {/* Local Events & Holidays — trip-date-aware */}
+        <LocalEvents
+          destination={tripData.metadata.destination}
+          startDate={tripData.metadata.startDate}
+          durationDays={tripData.metadata.durationInDays}
+        />
+
+        {/* Transport Guide — how to get around */}
+        <TransportGuide destination={tripData.metadata.destination} />
 
         {/* Widgets Grid: Weather & Currency */}
         <div className="widgets-grid no-print">
