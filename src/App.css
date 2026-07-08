@@ -6973,3 +6973,207 @@ input[type="range"] {
   margin: 4px 0 0;
   line-height: 1.4;
 }
+
+/* ============================================================
+   ONBOARDING MODAL — one-time post-login prompt
+   ============================================================ */
+@keyframes onboardingSlideUp {
+  from { opacity: 0; transform: translateY(40px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0)   scale(1);    }
+}
+
+.onboarding-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.onboarding-modal {
+  width: 100%;
+  max-width: 440px;
+  background: linear-gradient(135deg,
+    rgba(15, 23, 42, 0.97) 0%,
+    rgba(10, 10, 30, 0.97) 100%
+  );
+  border: 1px solid rgba(14, 165, 233, 0.2);
+  border-radius: 20px;
+  padding: 32px 28px;
+  box-shadow:
+    0 30px 80px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset,
+    0 0 60px rgba(14, 165, 233, 0.06);
+  animation: onboardingSlideUp 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Top accent line */
+.onboarding-modal::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--primary), var(--accent), transparent);
+}
+
+.onboarding-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.onboarding-wave {
+  font-size: 2.2rem;
+  animation: floatFab 3s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+.onboarding-title {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: white;
+  margin: 0 0 4px;
+  line-height: 1.2;
+}
+
+.onboarding-subtitle {
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.5);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.onboarding-optional-badge {
+  display: inline-block;
+  font-size: 0.72rem;
+  color: var(--primary);
+  background: rgba(14, 165, 233, 0.1);
+  border: 1px solid rgba(14, 165, 233, 0.2);
+  border-radius: var(--radius-pill);
+  padding: 3px 12px;
+  margin-bottom: 20px;
+  font-weight: 600;
+}
+
+.onboarding-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 18px;
+}
+
+.onboarding-label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.onboarding-select {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: white;
+  font-size: 0.9rem;
+  font-family: var(--font-body);
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  color-scheme: dark;
+}
+
+.onboarding-select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15);
+}
+
+.onboarding-select option {
+  background: #0f172a;
+  color: white;
+}
+
+.onboarding-field-hint {
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.35);
+  line-height: 1.5;
+}
+
+.onboarding-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.onboarding-save-btn {
+  width: 100%;
+  padding: 13px;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  border: none;
+  border-radius: var(--radius-md);
+  color: white;
+  font-size: 0.92rem;
+  font-weight: 700;
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.2s ease, filter 0.2s ease;
+}
+
+.onboarding-save-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(14, 165, 233, 0.35);
+  filter: brightness(1.1);
+}
+
+.onboarding-save-btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.onboarding-save-btn:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
+.onboarding-skip-btn {
+  width: 100%;
+  padding: 10px;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 0.8rem;
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: color 0.2s ease;
+  text-align: center;
+}
+
+.onboarding-skip-btn:hover {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+@media (max-width: 480px) {
+  .onboarding-modal {
+    padding: 24px 18px;
+  }
+  .onboarding-title {
+    font-size: 1.15rem;
+  }
+}
+
+/* ============================================================
+   PROFILE — nationality hint note
+   ============================================================ */
+.profile-input-help-note {
+  color: rgba(251, 191, 36, 0.7);
+  font-style: italic;
+}

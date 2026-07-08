@@ -30,6 +30,7 @@ import { initScrollReveal } from './utils/animations';
 import TripCountdown from './components/TripCountdown';
 import VisaInfo from './components/VisaInfo';
 import EmergencyInfo from './components/EmergencyInfo';
+import OnboardingModal from './components/OnboardingModal';
 
 function App() {
   const [tripData, setTripData] = useState<FullTripItinerary | null>(null);
@@ -50,6 +51,17 @@ function App() {
 
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const [syncMessage, setSyncMessage] = useState('');
+  // Show onboarding modal once — only after first login on this device
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  // Show onboarding modal on first login (travel_profile_onboarded not set yet)
+  useEffect(() => {
+    if (user && !localStorage.getItem('travel_profile_onboarded')) {
+      // Small delay so the page renders first
+      const t = setTimeout(() => setShowOnboarding(true), 800);
+      return () => clearTimeout(t);
+    }
+  }, [user]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -346,6 +358,14 @@ function App() {
         <div className="aurora-orb aurora-orb-2" />
         <div className="aurora-orb aurora-orb-3" />
       </div>
+
+      {/* One-time post-login onboarding modal — shown only once per device */}
+      {showOnboarding && (
+        <OnboardingModal
+          userName={user?.displayName ?? undefined}
+          onDone={() => setShowOnboarding(false)}
+        />
+      )}
       {/* Navbar — contains Save Trip button when trip is loaded */}
       <Navbar
         currentView={activeView}
@@ -596,6 +616,7 @@ function TripDashboard({
           destination={tripData.metadata.destination}
           startingPoint={tripData.metadata.startingPoint}
           homeCity={localStorage.getItem('travel_profile_home_city') ?? undefined}
+          nationality={localStorage.getItem('travel_profile_nationality') ?? undefined}
         />
 
         {/* Widgets Grid: Weather & Currency */}

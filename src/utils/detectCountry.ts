@@ -271,22 +271,37 @@ export function detectCountry(input: string): { iso: string; confident: boolean 
 
 /**
  * Resolve the user's passport country from available context (priority order):
- * 1. Saved home city in profile
- * 2. Trip starting point
+ * 1. Explicit nationality ISO-2 code set by user in Profile (most reliable)
+ * 2. Detected from profile home city (residence city)
+ * 3. Detected from trip starting point
+ * 4. Default India fallback
+ *
+ * NOTE: homeCity ≠ nationality. An Indian expat living in Dubai has
+ * homeCity="Dubai" but nationality="IN". Explicit always wins.
  */
 export function resolvePassportCountry(opts: {
-  homeCity?: string;
-  startingPoint?: string;
+  nationality?: string;   // explicit ISO-2 from localStorage (Priority 1)
+  homeCity?: string;      // residence city — may differ from nationality
+  startingPoint?: string; // trip origin
 }): { iso: string; confident: boolean; source: string } {
-  if (opts.homeCity?.trim()) {
-    const result = detectCountry(opts.homeCity);
-    if (result.confident) return { ...result, source: 'profile home city' };
+  // Priority 1: User explicitly set their passport country
+  if (opts.nationality?.trim() && opts.nationality.length === 2) {
+    const iso = opts.nationality.toUpperCase();
+    return { iso, confident: true, source: 'your passport settings' };
   }
 
+  // Priority 2: Infer from home city (city ≠ nationality, but best next guess)
+  if (opts.homeCity?.trim()) {
+    const result = detectCountry(opts.homeCity);
+    if (result.confident) return { ...result, source: 'home city (set passport in Profile for accuracy)' };
+  }
+
+  // Priority 3: Infer from trip starting point
   if (opts.startingPoint?.trim()) {
     const result = detectCountry(opts.startingPoint);
     if (result.confident) return { ...result, source: 'trip starting point' };
   }
 
-  return { iso: 'IN', confident: false, source: 'default (update Home City in Profile)' };
+  // Priority 4: Fallback
+  return { iso: 'IN', confident: false, source: 'default — set your passport in Profile' };
 }

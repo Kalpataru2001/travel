@@ -7,11 +7,15 @@ interface VisaInfoProps {
   destination: string;
   startingPoint?: string;  // from TripQuery
   homeCity?: string;       // from localStorage profile
+  nationality?: string;    // explicit ISO-2 from profile (Priority 1)
 }
 
-export default function VisaInfo({ destination, startingPoint, homeCity }: VisaInfoProps) {
-  // Resolve passport country from context — no guessing
-  const passport = useMemo(() => resolvePassportCountry({ homeCity, startingPoint }), [homeCity, startingPoint]);
+export default function VisaInfo({ destination, startingPoint, homeCity, nationality }: VisaInfoProps) {
+  // Resolve passport country — explicit nationality always wins over inference
+  const passport = useMemo(
+    () => resolvePassportCountry({ nationality, homeCity, startingPoint }),
+    [nationality, homeCity, startingPoint]
+  );
   const info = useMemo(() => getVisaInfo(passport.iso, destination), [passport.iso, destination]);
   const config = getStatusConfig(info.status);
 

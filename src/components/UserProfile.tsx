@@ -1,10 +1,11 @@
 // src/components/UserProfile.tsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '../utils/firebase';
 import type { FullTripItinerary, TripQuery } from '../types/travel';
 import { POPULAR_CURRENCIES } from '../utils/currency';
 import { initTiltCards } from '../utils/animations';
+import { ISO_COUNTRY_NAMES, detectCountry } from '../utils/detectCountry';
 
 interface UserProfileProps {
   onBackToPlanner: () => void;
@@ -24,9 +25,23 @@ export default function UserProfile({ onBackToPlanner }: UserProfileProps) {
   
   // Profile settings state
   const [homeCity, setHomeCity] = useState('');
+  const [nationality, setNationality] = useState(''); // ISO-2 passport country
   const [preferredCurrency, setPreferredCurrency] = useState('INR');
   const [preferredVibes, setPreferredVibes] = useState<TripQuery['travelStyle'][]>([]);
   const [showSaveSuccess, setShowSaveSuccess] = useState(false);
+
+  // Sorted country list for the nationality dropdown
+  const countryOptions = useMemo(() =>
+    Object.entries(ISO_COUNTRY_NAMES)
+      .sort((a, b) => a[1].localeCompare(b[1]))
+      .map(([iso, name]) => ({ iso, name })),
+  []);
+
+  // Country flag emoji helper
+  const flagEmoji = (iso: string) =>
+    iso.toUpperCase().split('').map((c) =>
+      String.fromCodePoint(c.charCodeAt(0) + 127397)
+    ).join('');
 
   // Load cache on mount
   useEffect(() => {
@@ -42,10 +57,18 @@ export default function UserProfile({ onBackToPlanner }: UserProfileProps) {
 
     // Load profile settings
     const cachedHome = localStorage.getItem('travel_profile_home_city') || '';
+    const cachedNationality = localStorage.getItem('travel_profile_nationality') || '';
     const cachedCurrency = localStorage.getItem('travel_user_preferred_currency') || 'INR';
     const cachedVibes = localStorage.getItem('travel_profile_preferred_vibes');
 
     setHomeCity(cachedHome);
+    // Pre-fill nationality: explicit setting wins, else try to detect from homeCity
+    if (cachedNationality) {
+      setNationality(cachedNationality);
+    } else if (cachedHome) {
+      const detected = detectCountry(cachedHome);
+      if (detected.confident) setNationality(detected.iso);
+    }
     setPreferredCurrency(cachedCurrency);
     if (cachedVibes) {
       try {
@@ -78,6 +101,12 @@ export default function UserProfile({ onBackToPlanner }: UserProfileProps) {
   const handleSaveSettings = (e: React.FormEvent) => {
     e.preventDefault();
     localStorage.setItem('travel_profile_home_city', homeCity.trim());
+    // Only save nationality if user explicitly chose one
+    if (nationality) {
+      localStorage.setItem('travel_profile_nationality', nationality);
+    } else {
+      localStorage.removeItem('travel_profile_nationality');
+    }
     localStorage.setItem('travel_user_preferred_currency', preferredCurrency);
     localStorage.setItem('travel_profile_preferred_vibes', JSON.stringify(preferredVibes));
 
@@ -169,6 +198,31 @@ export default function UserProfile({ onBackToPlanner }: UserProfileProps) {
                 className="profile-input"
               />
               <span className="profile-input-help">Auto-fills the starting city when creating new trips.</span>
+            </div>
+
+            {/* Passport / Nationality — NEW */}
+            <div className="profile-form-group">
+              <label>🛂 Passport / Nationality</label>
+              <select
+                value={nationality}
+                onChange={(e) => setNationality(e.target.value)}
+                className="profile-select"
+              >
+                <option value="">— Select your passport country —</option>
+                {countryOptions.map(({ iso, name }) => (
+                  <option key={iso} value={iso}>
+                    {flagEmoji(iso)} {name}
+                  </option>
+                ))}
+              </select>
+              <span className="profile-input-help">
+                Used for accurate visa requirement checks on every trip.
+                {!nationality && homeCity && (
+                  <span className="profile-input-help-note">
+                    {' '}(Currently inferred from your home city — set this for guaranteed accuracy)
+                  </span>
+                )}
+              </span>
             </div>
 
             <div className="profile-form-group">
