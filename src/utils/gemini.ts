@@ -8,7 +8,7 @@ const genAI = new GoogleGenerativeAI(apiKey);
 
 export async function generateTravelItinerary(query: TripQuery): Promise<FullTripItinerary> {
   const model = genAI.getGenerativeModel({
-    model: 'gemini-2.5-flash',
+    model: 'gemini-3.5-flash',
     generationConfig: { responseMimeType: 'application/json' },
   });
 
