@@ -33,6 +33,7 @@ import EmergencyInfo from './components/EmergencyInfo';
 import OnboardingModal from './components/OnboardingModal';
 import LocalEvents from './components/LocalEvents';
 import TransportGuide from './components/TransportGuide';
+import PreTripChecklist from './components/PreTripChecklist';
 
 function App() {
   const [tripData, setTripData] = useState<FullTripItinerary | null>(null);
@@ -630,6 +631,14 @@ function TripDashboard({
 
         {/* Transport Guide — how to get around */}
         <TransportGuide destination={tripData.metadata.destination} />
+
+        {/* Pre-Trip Smart Checklist — task list that evolves as trip approaches */}
+        <PreTripChecklist
+          tripId={tripData.id}
+          destination={tripData.metadata.destination}
+          startDate={tripData.metadata.startDate}
+          durationDays={tripData.metadata.durationInDays}
+        />
 
         {/* Widgets Grid: Weather & Currency */}
         <div className="widgets-grid no-print">
