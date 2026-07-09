@@ -123,3 +123,35 @@ export function initStaggerCards(selector = '.trip-card') {
 
   return () => {};
 }
+
+/** ──────────────────────────────────────────────
+ *  CARD REVEAL — fade-up for widget cards
+ *  Works with .tg-card, .le-card, .ptc-card CSS classes.
+ *  The CSS in App.css handles initial hidden state + transition.
+ * ────────────────────────────────────────────── */
+export function initCardReveal(selector = '.tg-card, .le-card, .ptc-card') {
+  // Immediately reveal if user prefers reduced motion
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    document.querySelectorAll<HTMLElement>(selector).forEach(el => el.classList.add('revealed'));
+    return () => {};
+  }
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          (entry.target as HTMLElement).classList.add('revealed');
+          observer.unobserve(entry.target);
+        }
+      });
+    },
+    { threshold: 0.08, rootMargin: '0px 0px -20px 0px' }
+  );
+
+  document.querySelectorAll<HTMLElement>(selector).forEach(el => {
+    if (!el.classList.contains('revealed')) observer.observe(el);
+  });
+
+  return () => observer.disconnect();
+}
+

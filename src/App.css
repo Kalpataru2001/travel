@@ -1,5 +1,5 @@
 /* src/App.css — Full Design System for AI Travel Guide */
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,700;1,600&display=swap');
+/* Google Fonts are loaded via <link> in index.html (non-blocking) */
 
 /* ============================================================
    CSS VARIABLES — Design Tokens
@@ -7943,4 +7943,207 @@ input[type="range"] {
   .ptc-body   { padding: 14px 16px 16px; }
   .ptc-filter-pills { gap: 6px; }
   .ptc-task-item { padding: 10px 12px; }
+}
+
+/* ============================================================
+   GLOBAL POLISH — Smooth Scroll + Focus Rings + Base
+   ============================================================ */
+
+/* Smooth scroll for anchor links and JS scroll */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Global keyboard focus ring — visible ONLY for keyboard navigation,
+   not shown on mouse click (uses :focus-visible) */
+*:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Remove focus ring on elements that have their own focus styles */
+.form-input:focus-visible,
+.profile-input:focus-visible,
+.profile-select:focus-visible,
+.budget-form-input:focus-visible,
+.assistant-chat-input:focus-visible {
+  outline: none; /* These already have box-shadow focus style */
+}
+
+/* ── ComponentLoader (Suspense fallback) ── */
+.component-loader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 32px 0;
+  min-height: 60px;
+}
+
+.component-loader-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--primary);
+  opacity: 0.4;
+  animation: loaderPulse 1.2s ease-in-out infinite;
+}
+
+.component-loader-dot:nth-child(2) { animation-delay: 0.2s; }
+.component-loader-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes loaderPulse {
+  0%, 80%, 100% { transform: scale(0.7); opacity: 0.3; }
+  40%           { transform: scale(1);   opacity: 1; }
+}
+
+/* ── Scroll-reveal — new cards animate in when scrolled into view ── */
+.tg-card,
+.le-card,
+.ptc-card {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.tg-card.revealed,
+.le-card.revealed,
+.ptc-card.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── Reduced-motion: disable float animation on empty states ── */
+@media (prefers-reduced-motion: reduce) {
+  .empty-state-icon {
+    animation: none !important;
+  }
+  .tg-card,
+  .le-card,
+  .ptc-card {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .component-loader-dot {
+    animation: none;
+    opacity: 0.6;
+  }
+}
+
+/* ============================================================
+   MOBILE IMPROVEMENTS — 360px / 480px / 768px
+   ============================================================ */
+
+/* ── Trip destination title — fluid scaling instead of fixed px ── */
+.trip-destination {
+  font-size: clamp(1.6rem, 5.5vw, 3.5rem) !important;
+}
+
+/* ── App content — safe minimum padding at very small screens ── */
+@media (max-width: 380px) {
+  .app-content {
+    padding: 10px 12px !important;
+  }
+
+  /* Prevent trip-stat badges from overflowing horizontally */
+  .trip-stats {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .trip-stat {
+    font-size: 0.72rem;
+    padding: 5px 10px;
+  }
+
+  /* Navbar brand on tiny screens */
+  .navbar-brand-text {
+    display: none;
+  }
+}
+
+/* ── Horizontal pill-strip scrolling on tiny screens
+   Prevents the pill rows from wrapping awkwardly below 400px ── */
+@media (max-width: 420px) {
+  .tg-quick-pills,
+  .le-highlights,
+  .ptc-filter-pills {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 4px;
+  }
+
+  .tg-quick-pills::-webkit-scrollbar,
+  .le-highlights::-webkit-scrollbar,
+  .ptc-filter-pills::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Prevent chips from shrinking below readable size */
+  .tg-quick-pill,
+  .le-highlight-chip,
+  .ptc-filter-pill {
+    flex-shrink: 0;
+  }
+}
+
+/* ── Widget grid — stack at 640px (tighter breakpoint than 900px) ── */
+@media (max-width: 640px) {
+  .widgets-grid {
+    grid-template-columns: 1fr !important;
+    gap: 14px;
+  }
+}
+
+/* ── Form style-grid — prevent label text clipping on phones ── */
+@media (max-width: 420px) {
+  .style-card span {
+    font-size: 0.62rem;
+    line-height: 1.2;
+  }
+
+  .style-card .style-icon {
+    font-size: 1.4rem;
+  }
+}
+
+/* ── Timeline scroll max-height on phones — give more room ── */
+@media (max-width: 480px) {
+  .timeline-scroll {
+    max-height: 480px;
+  }
+
+  /* Ensure hero input doesn't overflow on 360px */
+  .hero-input-group {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  /* Trip header padding at tiny screens */
+  .trip-header {
+    padding: 28px 14px !important;
+  }
+}
+
+/* ── General interactive element minimum touch target size ── */
+.nav-tab,
+.hamburger-btn,
+.back-btn,
+.save-trip-btn,
+.ptc-filter-pill,
+.tg-search-btn {
+  min-height: 40px; /* WCAG 2.5.5 touch target */
+}
+
+/* ── Consistent transition on all card hover states ── */
+.tg-card,
+.le-card,
+.ptc-card {
+  transition: opacity 0.4s ease, transform 0.4s ease,
+              border-color 0.3s var(--transition),
+              box-shadow 0.3s var(--transition);
 }

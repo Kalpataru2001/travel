@@ -1,20 +1,36 @@
 // src/App.tsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import './App.css';
 import './styles/3d-pages.css';
 import './styles/3d-remaining.css';
-import TravelMap from './components/TravelMap';
-import ItineraryTimeline from './components/ItineraryTimeline';
+
+// ── Always-needed (above-fold / on every page) ─────────────────────────────
 import TripPlannerForm from './components/TripPlannerForm';
 import Navbar from './components/Navbar';
-import SavedTrips from './components/SavedTrips';
-import HotelRecommendations from './components/HotelRecommendations';
+import HeroScene from './components/HeroScene';
+import OnboardingModal from './components/OnboardingModal';
+import TripCountdown from './components/TripCountdown';
+import VisaInfo from './components/VisaInfo';
 import WeatherWidget from './components/WeatherWidget';
 import CurrencyConverter from './components/CurrencyConverter';
-import PackingList from './components/PackingList';
-import TravelAssistant from './components/TravelAssistant';
-import BudgetTracker from './components/BudgetTracker';
-import LanguagePhrasebook from './components/LanguagePhrasebook';
+import EmergencyInfo from './components/EmergencyInfo';
+
+// ── Lazy-loaded: only downloaded when a trip is shown ──────────────────────
+const ItineraryTimeline  = lazy(() => import('./components/ItineraryTimeline'));
+const TravelMap          = lazy(() => import('./components/TravelMap'));
+const BudgetTracker      = lazy(() => import('./components/BudgetTracker'));
+const LanguagePhrasebook = lazy(() => import('./components/LanguagePhrasebook'));
+const HotelRecommendations = lazy(() => import('./components/HotelRecommendations'));
+const PackingList        = lazy(() => import('./components/PackingList'));
+const TravelAssistant    = lazy(() => import('./components/TravelAssistant'));
+const LocalEvents        = lazy(() => import('./components/LocalEvents'));
+const TransportGuide     = lazy(() => import('./components/TransportGuide'));
+const PreTripChecklist   = lazy(() => import('./components/PreTripChecklist'));
+
+// ── Lazy-loaded: page-level views ──────────────────────────────────────────
+const UserProfile  = lazy(() => import('./components/UserProfile'));
+const SavedTrips   = lazy(() => import('./components/SavedTrips'));
+
 import { generateTravelItinerary } from './utils/gemini';
 import type { FullTripItinerary } from './types/travel';
 import { syncOfflineTrips } from './utils/sync';
@@ -24,16 +40,18 @@ import { collection, addDoc, serverTimestamp, query, where, getDocs } from 'fire
 import { auth, db, googleProvider } from './utils/firebase';
 import { signInWithPopup } from 'firebase/auth';
 import { useDestinationImage } from './hooks/useDestinationImage';
-import UserProfile from './components/UserProfile';
-import HeroScene from './components/HeroScene';
-import { initScrollReveal } from './utils/animations';
-import TripCountdown from './components/TripCountdown';
-import VisaInfo from './components/VisaInfo';
-import EmergencyInfo from './components/EmergencyInfo';
-import OnboardingModal from './components/OnboardingModal';
-import LocalEvents from './components/LocalEvents';
-import TransportGuide from './components/TransportGuide';
-import PreTripChecklist from './components/PreTripChecklist';
+import { initScrollReveal, initCardReveal } from './utils/animations';
+
+/** Minimal inline loader shown while lazy chunks are downloading */
+function ComponentLoader() {
+  return (
+    <div className="component-loader" aria-busy="true">
+      <div className="component-loader-dot" />
+      <div className="component-loader-dot" />
+      <div className="component-loader-dot" />
+    </div>
+  );
+}
 
 function App() {
   const [tripData, setTripData] = useState<FullTripItinerary | null>(null);
@@ -65,6 +83,14 @@ function App() {
       return () => clearTimeout(t);
     }
   }, [user]);
+
+  // Trigger scroll-reveal for new widget cards after tripData loads
+  useEffect(() => {
+    if (!tripData) return;
+    // Small delay so Suspense lazy chunks finish rendering before observer runs
+    const t = setTimeout(() => initCardReveal(), 400);
+    return () => clearTimeout(t);
+  }, [tripData]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -388,12 +414,16 @@ function App() {
 
         {/* ── PROFILE VIEW ── */}
         {activeView === 'profile' && (
-          <UserProfile onBackToPlanner={() => setActiveView('planner')} />
+          <Suspense fallback={<ComponentLoader />}>
+            <UserProfile onBackToPlanner={() => setActiveView('planner')} />
+          </Suspense>
         )}
 
         {/* ── SAVED TRIPS VIEW ── */}
         {activeView === 'saved' && (
-          <SavedTrips onLoadTrip={handleLoadSavedTrip} />
+          <Suspense fallback={<ComponentLoader />}>
+            <SavedTrips onLoadTrip={handleLoadSavedTrip} />
+          </Suspense>
         )}
 
         {/* ── PLANNER VIEW ── */}
@@ -622,23 +652,21 @@ function TripDashboard({
           nationality={localStorage.getItem('travel_profile_nationality') ?? undefined}
         />
 
-        {/* Local Events & Holidays — trip-date-aware */}
-        <LocalEvents
-          destination={tripData.metadata.destination}
-          startDate={tripData.metadata.startDate}
-          durationDays={tripData.metadata.durationInDays}
-        />
-
-        {/* Transport Guide — how to get around */}
-        <TransportGuide destination={tripData.metadata.destination} />
-
-        {/* Pre-Trip Smart Checklist — task list that evolves as trip approaches */}
-        <PreTripChecklist
-          tripId={tripData.id}
-          destination={tripData.metadata.destination}
-          startDate={tripData.metadata.startDate}
-          durationDays={tripData.metadata.durationInDays}
-        />
+        {/* Local Events, Transport, Checklist — lazy-loaded */}
+        <Suspense fallback={<ComponentLoader />}>
+          <LocalEvents
+            destination={tripData.metadata.destination}
+            startDate={tripData.metadata.startDate}
+            durationDays={tripData.metadata.durationInDays}
+          />
+          <TransportGuide destination={tripData.metadata.destination} />
+          <PreTripChecklist
+            tripId={tripData.id}
+            destination={tripData.metadata.destination}
+            startDate={tripData.metadata.startDate}
+            durationDays={tripData.metadata.durationInDays}
+          />
+        </Suspense>
 
         {/* Widgets Grid: Weather & Currency */}
         <div className="widgets-grid no-print">
@@ -653,74 +681,61 @@ function TripDashboard({
           <CurrencyConverter destination={tripData.metadata.destination} />
         </div>
 
-        {/* Dashboard Grid */}
-        <div className="dashboard-grid">
+        {/* Dashboard Grid + heavy below-fold components — all lazy */}
+        <Suspense fallback={<ComponentLoader />}>
+          <div className="dashboard-grid">
 
-          {/* Left: Itinerary Timeline */}
-          <div className="timeline-panel">
-            <div className="timeline-panel-header">
-              <div className="map-dot" />
-              <span className="timeline-panel-title">Day-by-Day Itinerary</span>
+            {/* Left: Itinerary Timeline */}
+            <div className="timeline-panel">
+              <div className="timeline-panel-header">
+                <div className="map-dot" />
+                <span className="timeline-panel-title">Day-by-Day Itinerary</span>
+              </div>
+              <ItineraryTimeline tripData={tripData} onUpdateTripData={setTripData} />
             </div>
-            <ItineraryTimeline tripData={tripData} onUpdateTripData={setTripData} />
+
+            {/* Right: Interactive Map */}
+            <div className="map-panel">
+              <div className="map-panel-header">
+                <div className="map-dot" />
+                <span className="map-panel-title">Interactive Route Map</span>
+                {tripData.hotels && tripData.hotels.length > 0 && (
+                  <span style={{
+                    marginLeft: 'auto', fontSize: '0.72rem',
+                    color: '#f59e0b', fontWeight: 600,
+                    display: 'flex', alignItems: 'center', gap: '4px'
+                  }}>
+                    <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#f59e0b', display: 'inline-block' }} />
+                    Hotels
+                  </span>
+                )}
+              </div>
+              <TravelMap tripData={tripData} hotels={tripData.hotels} />
+            </div>
+
           </div>
 
-          {/* Right: Interactive Map — passes hotel markers too */}
-          <div className="map-panel">
-            <div className="map-panel-header">
-              <div className="map-dot" />
-              <span className="map-panel-title">Interactive Route Map</span>
-              {tripData.hotels && tripData.hotels.length > 0 && (
-                <span style={{
-                  marginLeft: 'auto',
-                  fontSize: '0.72rem',
-                  color: '#f59e0b',
-                  fontWeight: 600,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px'
-                }}>
-                  <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#f59e0b', display: 'inline-block' }} />
-                  Hotels
-                </span>
-              )}
-            </div>
-            <TravelMap tripData={tripData} hotels={tripData.hotels} />
-          </div>
+          <BudgetTracker tripData={tripData} onUpdateTripData={setTripData} />
+          <LanguagePhrasebook tripData={tripData} />
 
-        </div>
+          {tripData.hotels && tripData.hotels.length > 0 && (
+            <HotelRecommendations
+              hotels={tripData.hotels}
+              destination={tripData.metadata.destination}
+              travelStyle={tripData.metadata.travelStyle}
+            />
+          )}
 
-        {/* Budget & Expense Tracker */}
-        <BudgetTracker
-          tripData={tripData}
-          onUpdateTripData={setTripData}
-        />
-
-        {/* Local Phrasebook & Audio Pronunciation */}
-        <LanguagePhrasebook tripData={tripData} />
-
-        {/* Hotel Recommendations */}
-        {tripData.hotels && tripData.hotels.length > 0 && (
-          <HotelRecommendations
-            hotels={tripData.hotels}
-            destination={tripData.metadata.destination}
-            travelStyle={tripData.metadata.travelStyle}
+          <PackingList
+            tripData={tripData}
+            onUpdateTripData={setTripData}
+            currentTemp={currentTemp}
+            currentCondition={currentCondition}
           />
-        )}
 
-        {/* Packing Checklist */}
-        <PackingList
-          tripData={tripData}
-          onUpdateTripData={setTripData}
-          currentTemp={currentTemp}
-          currentCondition={currentCondition}
-        />
-
-        {/* Emergency Contacts */}
-        <EmergencyInfo destination={tripData.metadata.destination} />
-
-        {/* AI Travel Assistant */}
-        <TravelAssistant tripData={tripData} />
+          <EmergencyInfo destination={tripData.metadata.destination} />
+          <TravelAssistant tripData={tripData} />
+        </Suspense>
       </div>
   );
 }
