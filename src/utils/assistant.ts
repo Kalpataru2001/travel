@@ -1,7 +1,6 @@
 // src/utils/assistant.ts
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import type { FullTripItinerary } from '../types/travel';
-import { retryWithBackoff } from './retry';
 
 const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
 const genAI = new GoogleGenerativeAI(apiKey);
@@ -70,11 +69,6 @@ Instructions:
 5. If the user asks something completely unrelated to travel or the trip, politely steer the conversation back to their journey.
 `;
 
-  const model = genAI.getGenerativeModel({
-    model: 'gemini-3.5-flash',
-    systemInstruction,
-  });
-
   // Map history to SDK format, then strip any leading model messages.
   // Gemini requires history to always start with a 'user' turn.
   // We also exclude the last message (the current newMessage the user just sent)
@@ -93,11 +87,29 @@ Instructions:
   }
   const sdkHistory = rawHistory.slice(startIdx);
 
-  const chat = model.startChat({
-    history: sdkHistory,
-  });
+  const modelsToTry = ['gemini-3.5-flash', 'gemini-3.1-flash-lite', 'gemini-2.5-flash-lite', 'gemini-flash-latest'];
+  let lastError: any = null;
 
-  const result = await retryWithBackoff(() => chat.sendMessage(newMessage));
-  const response = await result.response;
-  return response.text();
+  for (const modelName of modelsToTry) {
+    try {
+      console.log(`[Assistant API] Messaging assistant using model: ${modelName}`);
+      const model = genAI.getGenerativeModel({
+        model: modelName,
+        systemInstruction,
+      });
+
+      const chat = model.startChat({
+        history: sdkHistory,
+      });
+
+      const result = await chat.sendMessage(newMessage);
+      const response = await result.response;
+      return response.text();
+    } catch (error) {
+      console.warn(`[Assistant API] Model ${modelName} failed. Error:`, error);
+      lastError = error;
+    }
+  }
+
+  throw new Error(`Failed to send message to assistant: ${lastError?.message || lastError}`);
 }

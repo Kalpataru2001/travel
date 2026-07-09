@@ -1,16 +1,21 @@
 // src/utils/gemini.ts
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import type { TripQuery, FullTripItinerary } from '../types/travel';
-import { retryWithBackoff } from './retry';
 
 const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
 const genAI = new GoogleGenerativeAI(apiKey);
 
+function cleanJSONResponse(text: string): string {
+  const firstBrace = text.indexOf('{');
+  const lastBrace = text.lastIndexOf('}');
+  
+  if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+    return text.slice(firstBrace, lastBrace + 1);
+  }
+  return text.trim();
+}
+
 export async function generateTravelItinerary(query: TripQuery): Promise<FullTripItinerary> {
-  const model = genAI.getGenerativeModel({
-    model: 'gemini-3.5-flash',
-    generationConfig: { responseMimeType: 'application/json' },
-  });
 
   const styles = query.travelStyles || [query.travelStyle];
   const hotelHints = styles.map((s) => {
@@ -155,12 +160,26 @@ export async function generateTravelItinerary(query: TripQuery): Promise<FullTri
     2. In 'localPhrases', translate exactly these 10 standard phrases: 'Hello / Welcome', 'Thank you', 'Please', 'Excuse me / Sorry', 'Yes', 'No', 'How much is this?', 'Where is the bathroom?', 'Do you speak English?', 'Delicious!'. Provide a phonetic pronunciation guide for each.
   `;
 
-  try {
-    const result = await retryWithBackoff(() => model.generateContent(prompt));
-    const responseText = result.response.text();
-    return JSON.parse(responseText) as FullTripItinerary;
-  } catch (error) {
-    console.error('Error asking Gemini:', error);
-    throw new Error('Failed to generate travel itinerary. Please try again.');
+  const modelsToTry = ['gemini-3.5-flash', 'gemini-3.1-flash-lite', 'gemini-2.5-flash-lite', 'gemini-flash-latest'];
+  let lastError: any = null;
+
+  for (const modelName of modelsToTry) {
+    try {
+      console.log(`[Gemini API] Generating itinerary using model: ${modelName}`);
+      const model = genAI.getGenerativeModel({
+        model: modelName,
+        generationConfig: { responseMimeType: 'application/json' },
+      });
+      const result = await model.generateContent(prompt);
+      const responseText = result.response.text();
+      const cleanedJSON = cleanJSONResponse(responseText);
+      return JSON.parse(cleanedJSON) as FullTripItinerary;
+    } catch (error) {
+      console.warn(`[Gemini API] Model ${modelName} failed. Error:`, error);
+      lastError = error;
+    }
   }
+
+  console.error('Error asking Gemini:', lastError);
+  throw new Error(`Failed to generate travel itinerary. Gemini API is currently unavailable: ${lastError?.message || lastError}`);
 }

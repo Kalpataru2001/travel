@@ -40,7 +40,7 @@ import { collection, addDoc, serverTimestamp, query, where, getDocs } from 'fire
 import { auth, db, googleProvider } from './utils/firebase';
 import { signInWithPopup } from 'firebase/auth';
 import { useDestinationImage } from './hooks/useDestinationImage';
-import { initScrollReveal, initCardReveal } from './utils/animations';
+import { initScrollReveal } from './utils/animations';
 
 /** Minimal inline loader shown while lazy chunks are downloading */
 function ComponentLoader() {
@@ -84,13 +84,6 @@ function App() {
     }
   }, [user]);
 
-  // Trigger scroll-reveal for new widget cards after tripData loads
-  useEffect(() => {
-    if (!tripData) return;
-    // Small delay so Suspense lazy chunks finish rendering before observer runs
-    const t = setTimeout(() => initCardReveal(), 400);
-    return () => clearTimeout(t);
-  }, [tripData]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -673,6 +666,7 @@ function TripDashboard({
           <WeatherWidget
             destination={tripData.metadata.destination}
             startDate={tripData.metadata.startDate}
+            coordinates={tripData.hotels?.[0]?.coordinates || tripData.itinerary?.[0]?.activities?.[0]?.coordinates}
             onWeatherLoaded={(temp, cond) => {
               setCurrentTemp(temp);
               setCurrentCondition(cond);

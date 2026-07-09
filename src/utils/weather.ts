@@ -166,7 +166,10 @@ export function generateMockWeather(destination: string): WeatherData {
   };
 }
 
-export async function fetchWeather(destination: string): Promise<WeatherData> {
+export async function fetchWeather(
+  destination: string,
+  coords?: { lat: number; lng: number }
+): Promise<WeatherData> {
   const isPlaceholder = !API_KEY || API_KEY === 'your_openweathermap_key_here' || API_KEY.trim() === '';
 
   if (isPlaceholder) {
@@ -175,8 +178,12 @@ export async function fetchWeather(destination: string): Promise<WeatherData> {
     return generateMockWeather(destination);
   }
 
-  // Fetch 5-day / 3-hour forecast (gives us today + next 4 days)
-  const url = `https://api.openweathermap.org/data/2.5/forecast?q=${encodeURIComponent(destination)}&appid=${API_KEY}&units=metric&cnt=40`;
+  // Fetch by coordinates if available to prevent 404s on regional names, otherwise by query name
+  const queryParam = coords && typeof coords.lat === 'number' && typeof coords.lng === 'number'
+    ? `lat=${coords.lat}&lon=${coords.lng}`
+    : `q=${encodeURIComponent(destination)}`;
+
+  const url = `https://api.openweathermap.org/data/2.5/forecast?${queryParam}&appid=${API_KEY}&units=metric&cnt=40`;
 
   try {
     const res = await fetch(url);

@@ -6,6 +6,7 @@ import type { WeatherData, WeatherDay } from '../utils/weather';
 interface WeatherWidgetProps {
   destination: string;
   startDate?: string; // ISO date string — trip start date
+  coordinates?: { lat: number; lng: number };
   onWeatherLoaded?: (temp: number, condition: string) => void;
 }
 
@@ -99,7 +100,7 @@ function WeatherDisplay({
   );
 }
 
-export default function WeatherWidget({ destination, startDate, onWeatherLoaded }: WeatherWidgetProps) {
+export default function WeatherWidget({ destination, startDate, coordinates, onWeatherLoaded }: WeatherWidgetProps) {
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -110,7 +111,7 @@ export default function WeatherWidget({ destination, startDate, onWeatherLoaded 
     setError(null);
     setWeather(null);
 
-    fetchWeather(destination)
+    fetchWeather(destination, coordinates)
       .then((data) => {
         if (!cancelled) {
           setWeather(data);
@@ -129,7 +130,7 @@ export default function WeatherWidget({ destination, startDate, onWeatherLoaded 
       });
 
     return () => { cancelled = true; };
-  }, [destination, onWeatherLoaded]);
+  }, [destination, coordinates, onWeatherLoaded]);
 
   if (loading) {
     return (
@@ -151,6 +152,7 @@ export default function WeatherWidget({ destination, startDate, onWeatherLoaded 
 
   const mode = resolveMode(startDate);
   const days = startDate ? daysUntil(startDate) : 0;
+  const condClass = `cond-${weather.current.condition.toLowerCase().replace(/\s+/g, '-')}`;
 
   // ── Mode: forecast available for trip date ──────────────────────────────
   if (mode === 'forecast-available' && startDate) {
@@ -160,7 +162,7 @@ export default function WeatherWidget({ destination, startDate, onWeatherLoaded 
     });
 
     return (
-      <div className="weather-widget">
+      <div className={`weather-widget ${condClass}`}>
         {/* Trip day forecast banner */}
         <div className="weather-trip-date-banner">
           <span>📅 Trip Day Forecast — {tripDate}</span>
@@ -212,7 +214,7 @@ export default function WeatherWidget({ destination, startDate, onWeatherLoaded 
     });
 
     return (
-      <div className="weather-widget">
+      <div className={`weather-widget ${condClass}`}>
         <WeatherDisplay
           day={weather.current}
           label={weather.isMock ? 'Simulated Weather' : 'Current Weather'}
@@ -252,7 +254,7 @@ export default function WeatherWidget({ destination, startDate, onWeatherLoaded 
     });
 
     return (
-      <div className="weather-widget">
+      <div className={`weather-widget ${condClass}`}>
         <WeatherDisplay
           day={weather.current}
           label={weather.isMock ? 'Simulated Weather' : 'Current Weather'}
@@ -274,7 +276,7 @@ export default function WeatherWidget({ destination, startDate, onWeatherLoaded 
 
   // ── Mode: current (no date, or date is today) ────────────────────────────
   return (
-    <div className="weather-widget">
+    <div className={`weather-widget ${condClass}`}>
       <WeatherDisplay
         day={weather.current}
         label={weather.isMock ? 'Simulated Weather' : 'Live Weather'}
