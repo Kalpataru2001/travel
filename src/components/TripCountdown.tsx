@@ -30,13 +30,52 @@ function calcTimeLeft(startDate: string): TimeLeft {
   };
 }
 
-function Tile({ value, label }: { value: number; label: string }) {
+// SVG Ring Tile
+const SIZE = 72;
+const RADIUS = 30;
+const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
+
+function RingTile({
+  value,
+  label,
+  max,
+  unit,
+}: {
+  value: number;
+  label: string;
+  max: number;
+  unit: string;
+}) {
+  const progress = Math.min(value / max, 1);
+  const offset = CIRCUMFERENCE - progress * CIRCUMFERENCE;
+
   return (
-    <div className="countdown-tile">
+    <div className="countdown-tile" data-unit={unit}>
+      <svg
+        className="countdown-ring-svg"
+        width={SIZE}
+        height={SIZE}
+        viewBox={`0 0 ${SIZE} ${SIZE}`}
+      >
+        <circle
+          className="countdown-ring-track"
+          cx={SIZE / 2}
+          cy={SIZE / 2}
+          r={RADIUS}
+        />
+        <circle
+          className="countdown-ring-fill"
+          cx={SIZE / 2}
+          cy={SIZE / 2}
+          r={RADIUS}
+          strokeDasharray={CIRCUMFERENCE}
+          strokeDashoffset={offset}
+        />
+      </svg>
       <div className="countdown-tile-inner">
         <span className="countdown-number">{String(value).padStart(2, '0')}</span>
+        <span className="countdown-label">{label}</span>
       </div>
-      <span className="countdown-label">{label}</span>
     </div>
   );
 }
@@ -88,13 +127,13 @@ export default function TripCountdown({ startDate, destination }: TripCountdownP
 
       {!isPast && !isToday && timeLeft && (
         <div className="countdown-tiles">
-          <Tile value={timeLeft.days}    label="DAYS" />
+          <RingTile value={timeLeft.days}    label="DAYS"    max={365} unit="days" />
           <div className="countdown-separator">:</div>
-          <Tile value={timeLeft.hours}   label="HRS" />
+          <RingTile value={timeLeft.hours}   label="HRS"     max={24}  unit="hours" />
           <div className="countdown-separator">:</div>
-          <Tile value={timeLeft.minutes} label="MIN" />
+          <RingTile value={timeLeft.minutes} label="MIN"     max={60}  unit="minutes" />
           <div className="countdown-separator">:</div>
-          <Tile value={timeLeft.seconds} label="SEC" />
+          <RingTile value={timeLeft.seconds} label="SEC"     max={60}  unit="seconds" />
         </div>
       )}
 

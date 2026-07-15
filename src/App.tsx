@@ -53,6 +53,34 @@ function ComponentLoader() {
   );
 }
 
+/** Rotating tips panel shown during itinerary generation */
+const LOADING_TIPS = [
+  { icon: '🗺️', text: 'Scouting the best hidden gems...' },
+  { icon: '🏨', text: 'Finding top-rated stays...' },
+  { icon: '🛣️', text: 'Calculating optimal routes...' },
+  { icon: '🍜', text: 'Uncovering local dining spots...' },
+  { icon: '📸', text: 'Pinning must-see attractions...' },
+  { icon: '🌤️', text: 'Checking weather patterns...' },
+  { icon: '💡', text: 'Adding insider travel tips...' },
+];
+
+import { useRef } from 'react';
+function LoadingTips() {
+  const [idx, setIdx] = useState(0);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  useEffect(() => {
+    intervalRef.current = setInterval(() => setIdx(i => (i + 1) % LOADING_TIPS.length), 2200);
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
+  }, []);
+  const tip = LOADING_TIPS[idx];
+  return (
+    <div className="loading-tip-card" key={idx}>
+      <span className="loading-tip-icon">{tip.icon}</span>
+      <span className="loading-tip-text">{tip.text}</span>
+    </div>
+  );
+}
+
 function App() {
   const [tripData, setTripData] = useState<FullTripItinerary | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -473,6 +501,14 @@ function App() {
                         ⚠️ {error}
                       </div>
                     )}
+                    {/* Stats strip */}
+                    <div className="hero-stats-strip">
+                      <div className="hero-stat-item"><strong>50K+</strong> Trips Planned</div>
+                      <div className="hero-stat-dot" />
+                      <div className="hero-stat-item"><strong>120+</strong> Countries</div>
+                      <div className="hero-stat-dot" />
+                      <div className="hero-stat-item"><strong>AI</strong> Powered</div>
+                    </div>
                   </div>
 
                   {/* Floating destination tags — right side, over the globe */}
@@ -489,17 +525,21 @@ function App() {
             )}
 
 
-            {/* 2. Loading State */}
+            {/* 2. Loading State — Cinematic */}
             {isLoading && (
               <div className="loading-wrapper">
-                <div className="loading-blob">🧭</div>
+                <div className="loading-orbit">
+                  <div className="loading-blob">🧭</div>
+                  <div className="loading-orbit-ring" />
+                </div>
                 <h2 className="loading-title">Crafting your perfect journey...</h2>
                 <p className="loading-subtitle">
-                  Our AI is scouting locations, calculating optimal routes, and uncovering hidden gems. This takes about 10–15 seconds.
+                  Our AI is scouting locations, calculating optimal routes, and uncovering hidden gems.
                 </p>
                 <div className="loading-bar">
                   <div className="loading-bar-fill" />
                 </div>
+                <LoadingTips />
               </div>
             )}
 
