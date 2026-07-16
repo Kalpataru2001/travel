@@ -1,5 +1,5 @@
 // src/App.tsx
-import { useState, useEffect, lazy, Suspense } from 'react';
+import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import './App.css';
 import './styles/3d-pages.css';
 import './styles/3d-remaining.css';
@@ -36,7 +36,7 @@ import type { FullTripItinerary } from './types/travel';
 import { syncOfflineTrips } from './utils/sync';
 import { generateDefaultBudget } from './utils/budget';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { collection, addDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, query, where, getDocs, updateDoc, doc } from 'firebase/firestore';
 import { auth, db, googleProvider } from './utils/firebase';
 import { signInWithPopup } from 'firebase/auth';
 import { useDestinationImage } from './hooks/useDestinationImage';
@@ -64,7 +64,6 @@ const LOADING_TIPS = [
   { icon: '💡', text: 'Adding insider travel tips...' },
 ];
 
-import { useRef } from 'react';
 function LoadingTips() {
   const [idx, setIdx] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -180,11 +179,53 @@ function App() {
     if (tripData) {
       localStorage.setItem('travel_active_trip_cache', JSON.stringify(tripData));
       localStorage.setItem('travel_active_trip_is_saved', JSON.stringify(isSaved));
+
+      // Also update the saved-trips local cache so the Saved Trips page shows fresh data
+      try {
+        const cached = localStorage.getItem('travel_saved_trips_cache');
+        if (cached) {
+          const trips: FullTripItinerary[] = JSON.parse(cached);
+          const idx = trips.findIndex((t) => t.id === tripData.id);
+          if (idx >= 0) {
+            trips[idx] = tripData;
+            localStorage.setItem('travel_saved_trips_cache', JSON.stringify(trips));
+          }
+        }
+      } catch {
+        // ignore cache update errors
+      }
     } else {
       localStorage.removeItem('travel_active_trip_cache');
       localStorage.removeItem('travel_active_trip_is_saved');
     }
   }, [tripData, isSaved]);
+
+  // Auto-sync expense/budget changes back to Firestore when user is logged in and trip is saved
+  const syncDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (!tripData || !user || !isSaved) return;
+    // Debounce to avoid hammering Firestore on rapid changes
+    if (syncDebounceRef.current) clearTimeout(syncDebounceRef.current);
+    syncDebounceRef.current = setTimeout(async () => {
+      try {
+        // Find the Firestore document for this trip and update it
+        const q = query(
+          collection(db, 'trips'),
+          where('tripData.id', '==', tripData.id),
+          where('userId', '==', user.uid)
+        );
+        const snap = await getDocs(q);
+        if (!snap.empty) {
+          const docRef = doc(db, 'trips', snap.docs[0].id);
+          await updateDoc(docRef, { tripData, updatedAt: serverTimestamp() });
+        }
+      } catch (err) {
+        // Non-critical: expenses are already in localStorage, so user won't lose data
+        console.warn('Auto-sync to Firestore failed (non-critical):', err);
+      }
+    }, 1500); // 1.5s debounce
+    return () => { if (syncDebounceRef.current) clearTimeout(syncDebounceRef.current); };
+  }, [tripData?.budgetData?.expenses, tripData?.id, user?.uid, isSaved]);
 
   // Track connection state & auto sync when coming back online
   useEffect(() => {
