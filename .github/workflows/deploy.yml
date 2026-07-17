@@ -27,7 +27,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # 4. Build the app
+      # 4. Recreate .env file from GitHub Secrets
+      - name: Recreate .env file
+        run: |
+          echo "${{ secrets.ENV_FILE }}" > .env
+
+      # 5. Build the app
       - name: Build
         run: npm run build
 
