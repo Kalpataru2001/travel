@@ -36,7 +36,7 @@ import type { FullTripItinerary } from './types/travel';
 import { syncOfflineTrips } from './utils/sync';
 import { generateDefaultBudget } from './utils/budget';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { collection, addDoc, serverTimestamp, query, where, getDocs, updateDoc, doc } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, query, where, getDocs, updateDoc, doc, setDoc } from 'firebase/firestore';
 import { auth, db, googleProvider } from './utils/firebase';
 import { signInWithPopup } from 'firebase/auth';
 import { useDestinationImage } from './hooks/useDestinationImage';
@@ -338,10 +338,16 @@ function App() {
     }
 
     try {
-      await addDoc(collection(db, 'trips'), {
+      // Use setDoc with trip's own ID as the Firestore document ID.
+      // This prevents duplicates — re-saving the same trip overwrites the existing record.
+      if (!tripData.id) {
+        tripData.id = `trip_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      }
+      await setDoc(doc(db, 'trips', tripData.id), {
         userId: user.uid,
         tripData: tripData,
         createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
       });
       setSaveMessage('✅ Saved!');
       setIsSaved(true);

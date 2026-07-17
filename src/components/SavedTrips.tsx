@@ -78,9 +78,21 @@ export default function SavedTrips({ onLoadTrip }: SavedTripsProps) {
       return;
     }
     getDocs(query(collection(db, 'trips'), where('userId', '==', user.uid))).then(snap => {
-      const trips: FullTripItinerary[] = [];
+      const tripsMap = new Map<string, FullTripItinerary>(); // keyed by trip.id for dedup
       const ids: Record<string, string> = {};
-      snap.forEach(d => { const t = d.data().tripData as FullTripItinerary; trips.push(t); if (t.id) ids[t.id] = d.id; });
+
+      snap.forEach(d => {
+        const t = d.data().tripData as FullTripItinerary;
+        // Use the Firestore document ID (which is now the trip.id for new saves)
+        const tripId = t.id || d.id;
+        if (!tripsMap.has(tripId)) {
+          // First occurrence wins; skip duplicates from old addDoc approach
+          tripsMap.set(tripId, { ...t, id: tripId });
+          ids[tripId] = d.id;
+        }
+      });
+
+      const trips = Array.from(tripsMap.values());
       setSavedTrips(trips);
       setTripDocIds(ids);
       localStorage.setItem('travel_saved_trips_cache', JSON.stringify(trips));
