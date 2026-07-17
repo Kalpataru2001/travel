@@ -33,10 +33,12 @@ jobs:
           VITE_FIREBASE_MEASUREMENT_ID: ${{ secrets.VITE_FIREBASE_MEASUREMENT_ID }}
           VITE_WEATHER_API_KEY: ${{ secrets.VITE_WEATHER_API_KEY }}
 
+      # Use the official Firebase Action which supports service accounts natively
       - name: Deploy to Firebase Hosting
-        run: |
-          npx firebase-tools target:apply hosting app travel-app-65ff1
-          npx firebase-tools deploy --only hosting --project travel-app-65ff1
-        env:
-          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
-          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          channelId: live
+          projectId: travel-app-65ff1
+          target: app
