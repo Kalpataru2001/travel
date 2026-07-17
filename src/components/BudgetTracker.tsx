@@ -8,6 +8,8 @@ import { initTiltCards } from '../utils/animations';
 interface BudgetTrackerProps {
   tripData: FullTripItinerary;
   onUpdateTripData: (trip: FullTripItinerary) => void;
+  isSaved?: boolean;
+  isOffline?: boolean;
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -57,7 +59,12 @@ function formatAmount(amount: number, currencyCode: string): string {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export default function BudgetTracker({ tripData, onUpdateTripData }: BudgetTrackerProps) {
+export default function BudgetTracker({
+  tripData,
+  onUpdateTripData,
+  isSaved = false,
+  isOffline = false
+}: BudgetTrackerProps) {
   const budgetData = tripData.budgetData;
   if (!budgetData) return null;
 
@@ -337,8 +344,24 @@ export default function BudgetTracker({ tripData, onUpdateTripData }: BudgetTrac
         <div className="budget-title-block">
           <span className="budget-icon-badge">📊</span>
           <div>
-            <h2 className="budget-title">Travel Expense & Budget Tracker</h2>
-            <p className="budget-subtitle">{tripData.metadata.destination} · {tripData.metadata.durationInDays} Days</p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              <h2 className="budget-title" style={{ margin: 0 }}>Travel Expense & Budget Tracker</h2>
+              {/* Sync Status Badge */}
+              {!isSaved ? (
+                <span className="budget-sync-badge budget-sync-badge--unsaved" title="Plan your trip and save it to synchronize your expenses online.">
+                  ⚠️ Unsaved (Local Only)
+                </span>
+              ) : isOffline ? (
+                <span className="budget-sync-badge budget-sync-badge--offline" title="Stored in this browser's local storage. Will sync when online.">
+                  💾 Local Cache (Offline)
+                </span>
+              ) : (
+                <span className="budget-sync-badge budget-sync-badge--synced" title="Successfully saved and synchronized with your Firebase cloud database.">
+                  ☁️ Cloud Synced
+                </span>
+              )}
+            </div>
+            <p className="budget-subtitle" style={{ margin: '4px 0 0 0' }}>{tripData.metadata.destination} · {tripData.metadata.durationInDays} Days</p>
           </div>
         </div>
 

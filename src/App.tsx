@@ -225,7 +225,7 @@ function App() {
       }
     }, 1500); // 1.5s debounce
     return () => { if (syncDebounceRef.current) clearTimeout(syncDebounceRef.current); };
-  }, [tripData?.budgetData?.expenses, tripData?.id, user?.uid, isSaved]);
+  }, [JSON.stringify(tripData?.budgetData), tripData?.id, user?.uid, isSaved]);
 
   // Track connection state & auto sync when coming back online
   useEffect(() => {
@@ -602,6 +602,8 @@ function App() {
                 setCurrentCondition={setCurrentCondition}
                 setTripData={setTripData}
                 handleBackToPlanner={handleBackToPlanner}
+                isSaved={isSaved}
+                isOffline={isOffline}
               />
             )}
           </>
@@ -624,6 +626,8 @@ function TripDashboard({
   setCurrentCondition,
   setTripData,
   handleBackToPlanner,
+  isSaved,
+  isOffline,
 }: {
   tripData: FullTripItinerary;
   syncMessage: string;
@@ -634,6 +638,8 @@ function TripDashboard({
   setCurrentCondition: (c: string | undefined) => void;
   setTripData: (t: FullTripItinerary) => void;
   handleBackToPlanner: () => void;
+  isSaved: boolean;
+  isOffline: boolean;
 }) {
   // Resolve a real hero image for the destination
   const { src: heroBg } = useDestinationImage(
@@ -796,7 +802,12 @@ function TripDashboard({
 
           </div>
 
-          <BudgetTracker tripData={tripData} onUpdateTripData={setTripData} />
+          <BudgetTracker
+            tripData={tripData}
+            onUpdateTripData={setTripData}
+            isSaved={isSaved}
+            isOffline={isOffline}
+          />
           <LanguagePhrasebook tripData={tripData} />
 
           {tripData.hotels && tripData.hotels.length > 0 && (
