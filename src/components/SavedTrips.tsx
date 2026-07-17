@@ -1,64 +1,55 @@
 // src/components/SavedTrips.tsx
 import { useEffect, useState } from 'react';
+import '../styles/SavedTrips.css';
 import { collection, query, where, getDocs, deleteDoc, doc } from 'firebase/firestore';
 import { db, auth } from '../utils/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import type { FullTripItinerary } from '../types/travel';
-import { initStaggerCards, initTiltCards } from '../utils/animations';
 
 interface SavedTripsProps {
   onLoadTrip: (trip: FullTripItinerary) => void;
 }
 
 const STYLE_EMOJI: Record<string, string> = {
-  Adventure: '🧗',
-  Relaxation: '🏖️',
-  Culture: '🏛️',
-  Luxury: '✨',
-  Budget: '🎒',
+  Adventure: '🧗', Relaxation: '🏖️', Culture: '🏛️', Luxury: '✨', Budget: '🎒',
 };
 
-const HEADER_GRADIENTS = [
-  'linear-gradient(145deg, #0c2340 0%, #1a4a7a 100%)',
-  'linear-gradient(145deg, #064e3b 0%, #065f46 100%)',
-  'linear-gradient(145deg, #1e1b4b 0%, #3730a3 100%)',
-  'linear-gradient(145deg, #7c2d12 0%, #b45309 100%)',
-  'linear-gradient(145deg, #4a044e 0%, #86198f 100%)',
-  'linear-gradient(145deg, #0c4a6e 0%, #0369a1 100%)',
-  'linear-gradient(145deg, #14532d 0%, #166534 100%)',
-  'linear-gradient(145deg, #1c1917 0%, #44403c 100%)',
+const CARD_THEMES = [
+  { bg: 'linear-gradient(145deg, #0f2644 0%, #1e5799 60%, #2989d8 100%)', accent: '#60a5fa', icon: '🌊' },
+  { bg: 'linear-gradient(145deg, #0d4024 0%, #166534 60%, #22c55e 100%)', accent: '#4ade80', icon: '🌿' },
+  { bg: 'linear-gradient(145deg, #2d0a6e 0%, #5b21b6 60%, #8b5cf6 100%)', accent: '#c4b5fd', icon: '🔮' },
+  { bg: 'linear-gradient(145deg, #7c1a0a 0%, #c2410c 60%, #f97316 100%)', accent: '#fdba74', icon: '🔥' },
+  { bg: 'linear-gradient(145deg, #701a75 0%, #a21caf 60%, #d946ef 100%)', accent: '#f0abfc', icon: '💜' },
+  { bg: 'linear-gradient(145deg, #0c4a6e 0%, #0369a1 60%, #38bdf8 100%)', accent: '#7dd3fc', icon: '☁️' },
+  { bg: 'linear-gradient(145deg, #14532d 0%, #15803d 60%, #4ade80 100%)', accent: '#86efac', icon: '🌱' },
+  { bg: 'linear-gradient(145deg, #431407 0%, #9a3412 60%, #fb923c 100%)', accent: '#fed7aa', icon: '🌅' },
 ];
-
-const DESTINATION_EMOJIS: Record<string, string> = {
-  beach: '🏖️', mountain: '🏔️', city: '🌆', forest: '🌲',
-  temple: '⛩️', desert: '🏜️', island: '🏝️', snow: '❄️',
-  default: '✈️',
-};
 
 function getDestEmoji(dest: string): string {
   const d = dest.toLowerCase();
-  if (d.includes('beach') || d.includes('goa') || d.includes('maldive')) return '🏖️';
-  if (d.includes('mountain') || d.includes('himalaya') || d.includes('manali')) return '🏔️';
-  if (d.includes('forest') || d.includes('wayanad') || d.includes('coorg')) return '🌲';
-  if (d.includes('desert') || d.includes('rajasthan') || d.includes('jaisalmer')) return '🏜️';
-  if (d.includes('island') || d.includes('andaman')) return '🏝️';
-  return DESTINATION_EMOJIS.default;
+  if (/beach|goa|maldive|phuket/.test(d)) return '🏖️';
+  if (/mountain|himalaya|manali|shimla|leh|ladakh/.test(d)) return '🏔️';
+  if (/forest|wayanad|coorg|munnar|kodaikanal/.test(d)) return '🌲';
+  if (/desert|rajasthan|jaisalmer|sam sand/.test(d)) return '🏜️';
+  if (/island|andaman|lakshadweep/.test(d)) return '🏝️';
+  if (/paris|rome|london|amsterdam/.test(d)) return '🗼';
+  if (/dubai|abu dhabi/.test(d)) return '🏙️';
+  if (/tokyo|kyoto|japan/.test(d)) return '⛩️';
+  if (/bali|indonesia/.test(d)) return '🌴';
+  return '✈️';
 }
 
-function formatTripDate(dateStr?: string): string {
-  if (!dateStr) return 'No date set';
-  const d = new Date(dateStr);
-  return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+function formatDate(dateStr?: string): string {
+  if (!dateStr) return '';
+  return new Date(dateStr).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
-function getDaysUntil(dateStr?: string): string | null {
-  if (!dateStr) return null;
-  const diff = new Date(dateStr).setHours(0,0,0,0) - new Date().setHours(0,0,0,0);
-  const days = Math.ceil(diff / 86400000);
-  if (days < 0) return 'Completed';
-  if (days === 0) return 'Today!';
-  if (days === 1) return 'Tomorrow!';
-  return `${days}d away`;
+function getDaysTag(dateStr?: string): { label: string; type: 'future' | 'today' | 'past' | null } {
+  if (!dateStr) return { label: '', type: null };
+  const diff = Math.ceil((new Date(dateStr).setHours(0,0,0,0) - new Date().setHours(0,0,0,0)) / 86400000);
+  if (diff > 0) return { label: `${diff}d away`, type: 'future' };
+  if (diff === 0) return { label: 'Today! 🚀', type: 'today' };
+  return { label: 'Completed ✅', type: 'past' };
 }
 
 export default function SavedTrips({ onLoadTrip }: SavedTripsProps) {
@@ -66,373 +57,253 @@ export default function SavedTrips({ onLoadTrip }: SavedTripsProps) {
   const [savedTrips, setSavedTrips] = useState<FullTripItinerary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [search, setSearch] = useState('');
   const [filterStyle, setFilterStyle] = useState('All');
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'duration'>('newest');
-  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
-  // Store firestore doc IDs keyed by trip id
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [tripDocIds, setTripDocIds] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    const handleOnline = () => setIsOffline(false);
-    const handleOffline = () => setIsOffline(true);
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
+    window.addEventListener('online', () => setIsOffline(false));
+    window.addEventListener('offline', () => setIsOffline(true));
   }, []);
 
-  // 3D stagger + tilt for trip cards after they load
   useEffect(() => {
-    if (!isLoading && savedTrips.length > 0) {
-      const t1 = setTimeout(() => initStaggerCards('.trip-card'), 100);
-      const cleanup = initTiltCards('.trip-card', { maxTilt: 7, glowColor: 'rgba(14,165,233,0.18)' });
-      return () => { clearTimeout(t1); cleanup(); };
+    if (!user) { setIsLoading(false); return; }
+    if (!navigator.onLine) {
+      const c = localStorage.getItem('travel_saved_trips_cache');
+      if (c) try { setSavedTrips(JSON.parse(c)); } catch {}
+      setIsLoading(false);
+      return;
     }
-  }, [isLoading, savedTrips.length]);
-
-  useEffect(() => {
-    const fetchTrips = async () => {
-      if (!user) {
-        setIsLoading(false);
-        return;
-      }
-      if (!navigator.onLine) {
-        const cached = localStorage.getItem('travel_saved_trips_cache');
-        if (cached) {
-          try { setSavedTrips(JSON.parse(cached)); } catch {}
-        }
-        setIsLoading(false);
-        return;
-      }
-      try {
-        const q = query(collection(db, 'trips'), where('userId', '==', user.uid));
-        const querySnapshot = await getDocs(q);
-        const trips: FullTripItinerary[] = [];
-        const docIds: Record<string, string> = {};
-        querySnapshot.forEach((d) => {
-          const trip = d.data().tripData as FullTripItinerary;
-          trips.push(trip);
-          if (trip.id) docIds[trip.id] = d.id;
-        });
-        setSavedTrips(trips);
-        setTripDocIds(docIds);
-        localStorage.setItem('travel_saved_trips_cache', JSON.stringify(trips));
-      } catch (error) {
-        console.error('Error fetching trips:', error);
-        const cached = localStorage.getItem('travel_saved_trips_cache');
-        if (cached) {
-          try { setSavedTrips(JSON.parse(cached)); } catch {}
-        }
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchTrips();
+    getDocs(query(collection(db, 'trips'), where('userId', '==', user.uid))).then(snap => {
+      const trips: FullTripItinerary[] = [];
+      const ids: Record<string, string> = {};
+      snap.forEach(d => { const t = d.data().tripData as FullTripItinerary; trips.push(t); if (t.id) ids[t.id] = d.id; });
+      setSavedTrips(trips);
+      setTripDocIds(ids);
+      localStorage.setItem('travel_saved_trips_cache', JSON.stringify(trips));
+    }).catch(() => {
+      const c = localStorage.getItem('travel_saved_trips_cache');
+      if (c) try { setSavedTrips(JSON.parse(c)); } catch {}
+    }).finally(() => setIsLoading(false));
   }, [user]);
 
   const handleDelete = async (tripId: string) => {
     setDeletingId(tripId);
     try {
-      // Remove from Firestore if we have the doc ID
       const firestoreDocId = tripDocIds[tripId];
-      if (firestoreDocId && navigator.onLine) {
-        await deleteDoc(doc(db, 'trips', firestoreDocId));
-      }
-      // Remove from state
-      const updated = savedTrips.filter((t) => t.id !== tripId);
+      if (firestoreDocId && navigator.onLine) await deleteDoc(doc(db, 'trips', firestoreDocId));
+      const updated = savedTrips.filter(t => t.id !== tripId);
       setSavedTrips(updated);
-      // Update local cache
       localStorage.setItem('travel_saved_trips_cache', JSON.stringify(updated));
-    } catch (err) {
-      console.error('Delete failed:', err);
-    } finally {
-      setDeletingId(null);
-      setConfirmDeleteId(null);
-    }
+    } catch (e) { console.error(e); }
+    finally { setDeletingId(null); setConfirmDeleteId(null); }
   };
 
-  // Filter + search + sort
-  const allStyles = Array.from(
-    new Set(savedTrips.flatMap((t) =>
-      t.metadata.travelStyles || (t.metadata.travelStyle ? [t.metadata.travelStyle] : [])
-    ))
-  );
+  const allStyles = Array.from(new Set(savedTrips.flatMap(t => t.metadata.travelStyles || [t.metadata.travelStyle])));
 
   const displayed = savedTrips
-    .filter((t) => {
-      const q = searchQuery.toLowerCase();
-      const matchSearch = !q ||
-        t.metadata.destination.toLowerCase().includes(q) ||
-        t.metadata.startingPoint.toLowerCase().includes(q);
-      const matchStyle = filterStyle === 'All' ||
-        (t.metadata.travelStyles || [t.metadata.travelStyle]).some((s) => s === filterStyle);
-      return matchSearch && matchStyle;
+    .filter(t => {
+      const q = search.toLowerCase();
+      const ms = !q || t.metadata.destination.toLowerCase().includes(q) || t.metadata.startingPoint.toLowerCase().includes(q);
+      const mf = filterStyle === 'All' || (t.metadata.travelStyles || [t.metadata.travelStyle]).some(s => s === filterStyle);
+      return ms && mf;
     })
     .sort((a, b) => {
       if (sortBy === 'duration') return b.metadata.durationInDays - a.metadata.durationInDays;
-      if (sortBy === 'oldest') {
-        return new Date(a.metadata.startDate || 0).getTime() - new Date(b.metadata.startDate || 0).getTime();
-      }
-      // newest (default) — show later start dates first
-      return new Date(b.metadata.startDate || 0).getTime() - new Date(a.metadata.startDate || 0).getTime();
+      const da = new Date(a.metadata.startDate || 0).getTime();
+      const db2 = new Date(b.metadata.startDate || 0).getTime();
+      return sortBy === 'oldest' ? da - db2 : db2 - da;
     });
 
-  // ── Empty/Loading States ──────────────────────────────────────────
-  if (isLoading) {
-    return (
-      <div className="st-loading-wrapper">
-        <div className="st-loading-orbs">
-          <div className="st-orb" /><div className="st-orb" /><div className="st-orb" />
-        </div>
-        <div className="empty-state-icon" style={{ fontSize: '3rem' }}>🗺️</div>
-        <h2 className="empty-state-title">Loading your adventures...</h2>
-        <p className="empty-state-text">Fetching your saved trips from the cloud.</p>
-      </div>
-    );
-  }
+  const totalDays = savedTrips.reduce((s, t) => s + t.metadata.durationInDays, 0);
+  const totalActivities = savedTrips.reduce((s, t) => s + (t.itinerary?.reduce((d, day) => d + (day.activities?.length || 0), 0) || 0), 0);
+  const uniqueDests = new Set(savedTrips.map(t => t.metadata.destination)).size;
 
-  if (!user) {
-    return (
-      <div className="empty-state">
-        <div className="empty-state-icon">🔐</div>
-        <h2 className="empty-state-title">Sign in to see your trips</h2>
-        <p className="empty-state-text">
-          Your saved itineraries are stored securely. Sign in with Google to access them.
-        </p>
-      </div>
-    );
-  }
+  if (isLoading) return (
+    <div className="mytrips-loading">
+      <div className="mytrips-loading-ring" />
+      <span>Loading your adventures...</span>
+    </div>
+  );
 
-  if (savedTrips.length === 0) {
-    return (
-      <div className="empty-state">
-        <div className="empty-state-icon">🌍</div>
-        <h2 className="empty-state-title">No trips saved yet!</h2>
-        <p className="empty-state-text">
-          Plan your first adventure and tap <strong>"Save Trip"</strong> in the top bar to store it here.
-        </p>
-      </div>
-    );
-  }
+  if (!user) return (
+    <div className="mytrips-empty">
+      <div className="mytrips-empty-icon">🔐</div>
+      <h2>Sign in to see your trips</h2>
+      <p>Your saved itineraries are stored securely in the cloud.</p>
+    </div>
+  );
+
+  if (savedTrips.length === 0) return (
+    <div className="mytrips-empty">
+      <div className="mytrips-empty-icon">🌍</div>
+      <h2>No trips saved yet!</h2>
+      <p>Plan your first adventure and tap <strong>"Save Trip"</strong> to store it here.</p>
+    </div>
+  );
 
   return (
-    <div className="saved-trips-wrapper">
+    <div className="mytrips-page">
 
-      {/* ── Page Header ─────────────────────────────────────────── */}
-      <div className="saved-trips-header">
-        <div className="st-header-left">
-          <div className="st-header-badge">🗺️ My Collection</div>
-          <h2 className="saved-trips-title">
-            My Adventures
-            {isOffline && <span className="offline-badge">Offline</span>}
-          </h2>
-          <p className="saved-trips-subtitle">
-            <span className="st-count-pill">{savedTrips.length}</span>
-            {savedTrips.length === 1 ? ' trip' : ' trips'} saved
-            {isOffline ? ' · Viewing cached itineraries' : ' · Click any to reload the itinerary'}
-          </p>
+      {/* ── Hero Header ── */}
+      <div className="mytrips-hero">
+        <div className="mytrips-hero-left">
+          <p className="mytrips-hero-eyebrow">🗺️ MY COLLECTION {isOffline && <span className="mytrips-offline-dot">● Offline</span>}</p>
+          <h1 className="mytrips-hero-title">My Adventures</h1>
+          <p className="mytrips-hero-sub">{savedTrips.length} trips saved · Click any card to open</p>
         </div>
-
-        {/* Summary stats */}
-        <div className="st-header-stats">
-          <div className="st-stat">
-            <span className="st-stat-value">{savedTrips.reduce((s, t) => s + t.metadata.durationInDays, 0)}</span>
-            <span className="st-stat-label">Total Days</span>
+        <div className="mytrips-hero-stats">
+          <div className="mytrips-stat-card">
+            <span className="mytrips-stat-num">{savedTrips.length}</span>
+            <span className="mytrips-stat-lbl">Trips</span>
           </div>
-          <div className="st-stat">
-            <span className="st-stat-value">{new Set(savedTrips.map((t) => t.metadata.destination)).size}</span>
-            <span className="st-stat-label">Destinations</span>
+          <div className="mytrips-stat-card">
+            <span className="mytrips-stat-num">{totalDays}</span>
+            <span className="mytrips-stat-lbl">Days</span>
           </div>
-          <div className="st-stat">
-            <span className="st-stat-value">
-              {savedTrips.reduce((s, t) => s + (t.itinerary?.reduce((d, day) => d + (day.activities?.length || 0), 0) || 0), 0)}
-            </span>
-            <span className="st-stat-label">Activities</span>
+          <div className="mytrips-stat-card">
+            <span className="mytrips-stat-num">{uniqueDests}</span>
+            <span className="mytrips-stat-lbl">Destinations</span>
+          </div>
+          <div className="mytrips-stat-card">
+            <span className="mytrips-stat-num">{totalActivities}</span>
+            <span className="mytrips-stat-lbl">Activities</span>
           </div>
         </div>
       </div>
 
-      {/* ── Search + Filter Bar ──────────────────────────────────── */}
-      <div className="st-controls">
-        <div className="st-search-wrap">
-          <span className="st-search-icon">🔍</span>
+      {/* ── Controls ── */}
+      <div className="mytrips-controls">
+        <div className="mytrips-search-wrap">
+          <span className="mytrips-search-icon">🔍</span>
           <input
-            id="saved-trips-search"
-            className="st-search-input"
+            id="mytrips-search"
+            className="mytrips-search"
             type="text"
-            placeholder="Search by destination or city..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search destination or city..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
           />
-          {searchQuery && (
-            <button className="st-search-clear" onClick={() => setSearchQuery('')}>✕</button>
-          )}
+          {search && <button className="mytrips-search-x" onClick={() => setSearch('')}>✕</button>}
         </div>
 
-        <div className="st-filter-row">
-          <select
-            id="saved-trips-style-filter"
-            className="st-filter-select"
-            value={filterStyle}
-            onChange={(e) => setFilterStyle(e.target.value)}
-          >
+        <div className="mytrips-filters">
+          <select id="mytrips-style-filter" className="mytrips-select" value={filterStyle} onChange={e => setFilterStyle(e.target.value)}>
             <option value="All">All Styles</option>
-            {allStyles.map((s) => (
-              <option key={s} value={s}>{STYLE_EMOJI[s] || '✈️'} {s}</option>
-            ))}
+            {allStyles.map(s => <option key={s} value={s}>{STYLE_EMOJI[s] || '✈️'} {s}</option>)}
           </select>
-
-          <select
-            id="saved-trips-sort"
-            className="st-filter-select"
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-          >
-            <option value="newest">↓ Newest First</option>
-            <option value="oldest">↑ Oldest First</option>
-            <option value="duration">⏱ By Duration</option>
+          <select id="mytrips-sort" className="mytrips-select" value={sortBy} onChange={e => setSortBy(e.target.value as typeof sortBy)}>
+            <option value="newest">↓ Newest</option>
+            <option value="oldest">↑ Oldest</option>
+            <option value="duration">⏱ Duration</option>
           </select>
         </div>
       </div>
 
-      {/* ── No Results ──────────────────────────────────────────── */}
+      {/* ── No Results ── */}
       {displayed.length === 0 && (
-        <div className="empty-state" style={{ minHeight: '30vh' }}>
-          <div className="empty-state-icon">🔭</div>
-          <h2 className="empty-state-title">No trips match your search</h2>
-          <p className="empty-state-text">Try a different keyword or clear the filters.</p>
-          <button className="st-clear-btn" onClick={() => { setSearchQuery(''); setFilterStyle('All'); }}>
-            Clear Filters
-          </button>
+        <div className="mytrips-empty" style={{ minHeight: '30vh' }}>
+          <div className="mytrips-empty-icon">🔭</div>
+          <h2>No results</h2>
+          <p>Try different keywords or clear filters.</p>
+          <button className="mytrips-clear-btn" onClick={() => { setSearch(''); setFilterStyle('All'); }}>Clear Filters</button>
         </div>
       )}
 
-      {/* ── Trip Cards Grid ─────────────────────────────────────── */}
+      {/* ── Cards Grid ── */}
       {displayed.length > 0 && (
-        <div className="trips-grid">
-          {displayed.map((trip, index) => {
-            const styles = trip.metadata.travelStyles ||
-              (trip.metadata.travelStyle ? trip.metadata.travelStyle.split(', ') : ['Adventure']);
-            const daysUntil = getDaysUntil(trip.metadata.startDate);
-            const isConfirmingDelete = confirmDeleteId === trip.id;
+        <div className="mytrips-grid">
+          {displayed.map((trip, idx) => {
+            const theme = CARD_THEMES[idx % CARD_THEMES.length];
+            const styles = trip.metadata.travelStyles || (trip.metadata.travelStyle ? [trip.metadata.travelStyle] : ['Adventure']);
+            const daysTag = getDaysTag(trip.metadata.startDate);
+            const isConfirm = confirmDeleteId === trip.id;
             const isDeleting = deletingId === trip.id;
+            const activities = trip.itinerary?.reduce((s, d) => s + (d.activities?.length || 0), 0) || 0;
 
             return (
               <div
-                key={trip.id || index}
-                className={`trip-card ${isDeleting ? 'trip-card--deleting' : ''}`}
-                onClick={() => {
-                  if (isConfirmingDelete) return; // don't open when confirm is showing
-                  onLoadTrip(trip);
-                }}
+                key={trip.id || idx}
+                className={`mytrips-card ${isDeleting ? 'mytrips-card--exit' : ''}`}
+                style={{ '--card-accent': theme.accent } as React.CSSProperties}
+                onClick={() => { if (!isConfirm) onLoadTrip(trip); }}
               >
-                {/* ── Card Header ── */}
-                <div
-                  className="trip-card-header"
-                  style={{ background: HEADER_GRADIENTS[index % HEADER_GRADIENTS.length] }}
-                >
-                  {/* Big destination emoji watermark */}
-                  <span className="st-card-watermark">{getDestEmoji(trip.metadata.destination)}</span>
+                {/* ── Card Banner ── */}
+                <div className="mytrips-card-banner" style={{ background: theme.bg }}>
+                  {/* Big emoji BG */}
+                  <span className="mytrips-card-bg-emoji">{getDestEmoji(trip.metadata.destination)}</span>
 
-                  {/* Top row actions */}
-                  <div className="st-card-toprow">
-                    {trip.unsynced && (
-                      <span className="unsynced-card-badge" title="Stored locally. Syncs when online.">
-                        💾 Local
-                      </span>
+                  {/* Top row */}
+                  <div className="mytrips-card-topbar">
+                    {daysTag.type && (
+                      <span className={`mytrips-days-tag mytrips-days-tag--${daysTag.type}`}>{daysTag.label}</span>
                     )}
-                    {/* Days-until pill */}
-                    {daysUntil && (
-                      <span className={`st-days-pill ${daysUntil === 'Completed' ? 'st-days-pill--done' : daysUntil.includes('Today') ? 'st-days-pill--today' : ''}`}>
-                        {daysUntil === 'Completed' ? '✅ ' : '🗓️ '}{daysUntil}
-                      </span>
-                    )}
-                    {/* Delete button */}
-                    {!isDeleting ? (
-                      isConfirmingDelete ? (
-                        <div className="st-confirm-row" onClick={(e) => e.stopPropagation()}>
-                          <button
-                            className="st-confirm-yes"
-                            onClick={() => handleDelete(trip.id!)}
-                          >Delete</button>
-                          <button
-                            className="st-confirm-no"
-                            onClick={() => setConfirmDeleteId(null)}
-                          >Cancel</button>
-                        </div>
-                      ) : (
-                        <button
-                          id={`delete-trip-${trip.id}`}
-                          className="st-delete-btn"
-                          title="Delete this trip"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setConfirmDeleteId(trip.id || null);
-                          }}
-                        >
-                          🗑️
-                        </button>
-                      )
+                    {trip.unsynced && <span className="mytrips-local-tag">💾 Local</span>}
+
+                    {/* Delete */}
+                    {isConfirm ? (
+                      <div className="mytrips-confirm" onClick={e => e.stopPropagation()}>
+                        <button className="mytrips-confirm-yes" onClick={() => handleDelete(trip.id!)}>Delete</button>
+                        <button className="mytrips-confirm-no" onClick={() => setConfirmDeleteId(null)}>Cancel</button>
+                      </div>
                     ) : (
-                      <span className="st-deleting-spinner">⏳</span>
+                      <button
+                        id={`del-${trip.id}`}
+                        className="mytrips-del-btn"
+                        title="Delete trip"
+                        onClick={e => { e.stopPropagation(); setConfirmDeleteId(trip.id || null); }}
+                      >🗑</button>
                     )}
                   </div>
 
-                  {/* Destination title */}
-                  <h3 className="trip-card-dest">{trip.metadata.destination}</h3>
+                  {/* Theme icon watermark */}
+                  <span className="mytrips-card-theme-icon">{theme.icon}</span>
+
+                  {/* Destination */}
+                  <div className="mytrips-card-dest-wrap">
+                    <h3 className="mytrips-card-dest">{trip.metadata.destination}</h3>
+                    {trip.metadata.startDate && (
+                      <p className="mytrips-card-date">📅 {formatDate(trip.metadata.startDate)}</p>
+                    )}
+                  </div>
                 </div>
 
                 {/* ── Card Body ── */}
-                <div className="trip-card-body">
-                  {/* Start date */}
-                  {trip.metadata.startDate && (
-                    <div className="st-card-date">
-                      📅 {formatTripDate(trip.metadata.startDate)}
-                    </div>
-                  )}
-
-                  {/* Meta pills */}
-                  <div className="trip-card-meta">
-                    <span className="trip-meta-pill">
-                      🕐 {trip.metadata.durationInDays} Days
-                    </span>
-                    {styles.map((style) => {
-                      const cleanStyle = style.trim();
-                      return (
-                        <span key={cleanStyle} className="trip-meta-pill">
-                          {STYLE_EMOJI[cleanStyle] || '✈️'} {cleanStyle}
-                        </span>
-                      );
-                    })}
-                    <span className="trip-meta-pill">
-                      🛫 {trip.metadata.startingPoint}
-                    </span>
+                <div className="mytrips-card-body">
+                  {/* Style tags */}
+                  <div className="mytrips-style-tags">
+                    <span className="mytrips-tag mytrips-tag--dur">🕐 {trip.metadata.durationInDays} Days</span>
+                    {styles.slice(0, 2).map(s => (
+                      <span key={s} className="mytrips-tag">{STYLE_EMOJI[s.trim()] || '✈️'} {s.trim()}</span>
+                    ))}
+                    <span className="mytrips-tag">🛫 {trip.metadata.startingPoint}</span>
                   </div>
 
-                  {/* Mini stats row */}
-                  <div className="st-card-stats">
-                    <div className="st-mini-stat">
-                      <span className="st-mini-val">{trip.itinerary?.length || 0}</span>
-                      <span className="st-mini-label">Days</span>
+                  {/* Inline stats */}
+                  <div className="mytrips-inline-stats">
+                    <div className="mytrips-istat">
+                      <span className="mytrips-istat-val">{trip.itinerary?.length || trip.metadata.durationInDays}</span>
+                      <span className="mytrips-istat-lbl">Days Planned</span>
                     </div>
-                    <div className="st-mini-stat">
-                      <span className="st-mini-val">
-                        {trip.itinerary?.reduce((s, d) => s + (d.activities?.length || 0), 0) || 0}
-                      </span>
-                      <span className="st-mini-label">Activities</span>
+                    <div className="mytrips-istat-divider" />
+                    <div className="mytrips-istat">
+                      <span className="mytrips-istat-val">{activities}</span>
+                      <span className="mytrips-istat-lbl">Activities</span>
                     </div>
-                    <div className="st-mini-stat">
-                      <span className="st-mini-val">{trip.hotels?.length || 0}</span>
-                      <span className="st-mini-label">Hotels</span>
+                    <div className="mytrips-istat-divider" />
+                    <div className="mytrips-istat">
+                      <span className="mytrips-istat-val">{trip.hotels?.length || 0}</span>
+                      <span className="mytrips-istat-lbl">Hotels</span>
                     </div>
                   </div>
 
-                  <button className="view-trip-btn">
-                    View Full Itinerary →
+                  {/* CTA */}
+                  <button className="mytrips-open-btn">
+                    <span>Open Itinerary</span>
+                    <span className="mytrips-open-arrow">→</span>
                   </button>
                 </div>
               </div>
