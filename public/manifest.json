@@ -1,0 +1,43 @@
+{
+  "name": "AI Travel Guide",
+  "short_name": "TravelGuide",
+  "description": "Plan your perfect trip with AI-powered itineraries, real-time weather, visa info, packing lists, and more.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0f1729",
+  "theme_color": "#863bff",
+  "orientation": "portrait-primary",
+  "lang": "en",
+  "categories": ["travel", "lifestyle", "productivity"],
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Plan a Trip",
+      "short_name": "Plan",
+      "description": "Start planning a new trip",
+      "url": "/",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "My Saved Trips",
+      "short_name": "Trips",
+      "description": "View your saved trips",
+      "url": "/?view=saved",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

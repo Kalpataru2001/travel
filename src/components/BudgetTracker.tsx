@@ -1,7 +1,7 @@
 // src/components/BudgetTracker.tsx
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import type { FullTripItinerary, ExpenseItem } from '../types/travel';
-import { POPULAR_CURRENCIES, getFallbackRatesForBase } from '../utils/currency';
+import { POPULAR_CURRENCIES, fetchExchangeRates } from '../utils/currency';
 import { generateDefaultBudget } from '../utils/budget';
 import { initTiltCards } from '../utils/animations';
 
@@ -118,6 +118,7 @@ export default function BudgetTracker({
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [isCurrencyConverting, setIsCurrencyConverting] = useState(false);
   const [currencyDropdownOpen, setCurrencyDropdownOpen] = useState(false);
+  const [ratesStatus, setRatesStatus] = useState<'idle' | 'loading' | 'live' | 'estimated'>('idle');
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // 3D tilt on KPI cards
@@ -287,9 +288,9 @@ export default function BudgetTracker({
     setCurrencyDropdownOpen(false);
 
     try {
-      // Get rates based on old currency
-      const rates = getFallbackRatesForBase(currentCurrency);
-      const rate = rates[newCurrency] ?? 1;
+      // Fetch live rates (cached for 24h, falls back to hardcoded if API unavailable)
+      const ratesData = await fetchExchangeRates(currentCurrency);
+      const rate = ratesData.rates[newCurrency] ?? 1;
 
       const convertedTotalBudget = Math.round(budgetData.totalBudget * rate);
       const convertedCategoryBudgets: Record<string, number> = {};
@@ -312,9 +313,29 @@ export default function BudgetTracker({
         }
       });
 
+      // Show toast if rates were estimated (not live)
+      if (ratesData.isMock) {
+        console.warn('Currency converted using estimated rates (live API unavailable)');
+      }
+
       localStorage.setItem('travel_user_preferred_currency', newCurrency);
     } finally {
       setIsCurrencyConverting(false);
+    }
+  };
+
+  // Pre-fetch rates when dropdown opens so there's no delay on selection
+  const handleOpenCurrencyDropdown = async () => {
+    const next = !currencyDropdownOpen;
+    setCurrencyDropdownOpen(next);
+    if (next && ratesStatus === 'idle') {
+      setRatesStatus('loading');
+      try {
+        const ratesData = await fetchExchangeRates(currentCurrency);
+        setRatesStatus(ratesData.isMock ? 'estimated' : 'live');
+      } catch {
+        setRatesStatus('estimated');
+      }
     }
   };
 
@@ -370,7 +391,7 @@ export default function BudgetTracker({
           <div className="budget-currency-selector" ref={dropdownRef}>
             <button
               className="budget-currency-btn"
-              onClick={() => setCurrencyDropdownOpen(!currencyDropdownOpen)}
+              onClick={handleOpenCurrencyDropdown}
               disabled={isCurrencyConverting}
               title="Change budget currency"
             >
@@ -382,7 +403,12 @@ export default function BudgetTracker({
             </button>
             {currencyDropdownOpen && (
               <div className="budget-currency-dropdown">
-                <div className="currency-dropdown-search-header">Select Currency</div>
+                <div className="currency-dropdown-search-header">
+                  <span>Select Currency</span>
+                  {ratesStatus === 'loading' && <span style={{ fontSize: '0.65rem', color: '#94a3b8' }}>⟳ Fetching rates...</span>}
+                  {ratesStatus === 'live' && <span style={{ fontSize: '0.65rem', color: '#34d399', fontWeight: 700 }}>🟢 Live rates</span>}
+                  {ratesStatus === 'estimated' && <span style={{ fontSize: '0.65rem', color: '#fbbf24', fontWeight: 700 }}>🟡 Estimated rates</span>}
+                </div>
                 <div className="currency-dropdown-list">
                   {POPULAR_CURRENCIES.map((c) => (
                     <button

@@ -1,7 +1,7 @@
 import { signInWithPopup, signOut } from "firebase/auth";
 import { auth, googleProvider } from "../utils/firebase";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { FullTripItinerary } from "../types/travel";
 
 interface NavbarProps {
@@ -34,6 +34,28 @@ export default function Navbar({
   const [user] = useAuthState(auth);
   const [copied, setCopied] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [installPrompt, setInstallPrompt] = useState<Event | null>(null);
+  const [isInstalled, setIsInstalled] = useState(false);
+
+  // Capture the browser's install prompt so we can trigger it manually
+  useEffect(() => {
+    const handler = (e: Event) => {
+      e.preventDefault(); // prevent auto-prompt
+      setInstallPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handler);
+
+    // Detect if already installed as PWA (standalone mode)
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      setIsInstalled(true);
+    }
+    window.addEventListener('appinstalled', () => {
+      setInstallPrompt(null);
+      setIsInstalled(true);
+    });
+
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
 
   const handleLogin = async () => {
     try {
@@ -59,6 +81,18 @@ export default function Navbar({
   const handleNavChange = (view: 'planner' | 'saved' | 'profile') => {
     onViewChange(view);
     closeMobileMenu();
+  };
+
+  const handleInstall = async () => {
+    if (!installPrompt) return;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (installPrompt as any).prompt();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { outcome } = await (installPrompt as any).userChoice;
+    if (outcome === 'accepted') {
+      setInstallPrompt(null);
+      setIsInstalled(true);
+    }
   };
 
   return (
@@ -163,6 +197,18 @@ export default function Navbar({
                 </>
               )}
             </div>
+          )}
+
+          {/* PWA Install Button — shown only when browser supports install and app isn't installed yet */}
+          {installPrompt && !isInstalled && (
+            <button
+              className="pwa-install-btn navbar-desktop-only"
+              onClick={handleInstall}
+              title="Install AI Travel Guide as an app on your device"
+            >
+              <span>📲</span>
+              <span>Install App</span>
+            </button>
           )}
 
           {user ? (
