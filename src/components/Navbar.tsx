@@ -39,11 +39,17 @@ export default function Navbar({
 
   // Capture the browser's install prompt so we can trigger it manually
   useEffect(() => {
-    const handler = (e: Event) => {
-      e.preventDefault(); // prevent auto-prompt
-      setInstallPrompt(e);
+    // Check if the prompt was already captured before React mounted
+    if ((window as unknown as Record<string, unknown>).__pwaInstallPrompt) {
+      setInstallPrompt((window as unknown as Record<string, unknown>).__pwaInstallPrompt as Event);
+    }
+
+    // Also listen for it in case React mounted first
+    const onReady = () => {
+      const p = (window as unknown as Record<string, unknown>).__pwaInstallPrompt;
+      if (p) setInstallPrompt(p as Event);
     };
-    window.addEventListener('beforeinstallprompt', handler);
+    window.addEventListener('pwaInstallReady', onReady);
 
     // Detect if already installed as PWA (standalone mode)
     if (window.matchMedia('(display-mode: standalone)').matches) {
@@ -54,7 +60,7 @@ export default function Navbar({
       setIsInstalled(true);
     });
 
-    return () => window.removeEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('pwaInstallReady', onReady);
   }, []);
 
   const handleLogin = async () => {
@@ -202,7 +208,7 @@ export default function Navbar({
           {/* PWA Install Button — shown only when browser supports install and app isn't installed yet */}
           {installPrompt && !isInstalled && (
             <button
-              className="pwa-install-btn navbar-desktop-only"
+              className="pwa-install-btn"
               onClick={handleInstall}
               title="Install AI Travel Guide as an app on your device"
             >
