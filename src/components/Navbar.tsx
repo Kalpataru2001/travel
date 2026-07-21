@@ -205,10 +205,10 @@ export default function Navbar({
             </div>
           )}
 
-          {/* PWA Install Button — shown only when browser supports install and app isn't installed yet */}
+          {/* PWA Install Button — desktop navbar only; mobile version is in the hamburger menu */}
           {installPrompt && !isInstalled && (
             <button
-              className="pwa-install-btn"
+              className="pwa-install-btn navbar-desktop-only"
               onClick={handleInstall}
               title="Install AI Travel Guide as an app on your device"
             >
@@ -360,6 +360,18 @@ export default function Navbar({
                 </div>
                 <button className="mobile-nav-item danger" onClick={() => { signOut(auth); closeMobileMenu(); }}>
                   🚪 Sign Out
+                </button>
+              </div>
+            )}
+
+            {/* PWA Install — inside mobile menu so it doesn't crowd the navbar */}
+            {installPrompt && !isInstalled && (
+              <div className="mobile-nav-section">
+                <button
+                  className="mobile-nav-item pwa-install-mobile"
+                  onClick={() => { handleInstall(); closeMobileMenu(); }}
+                >
+                  📲 Install App on your phone
                 </button>
               </div>
             )}

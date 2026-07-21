@@ -2281,7 +2281,7 @@ input[type="range"] {
   }
 
   .trip-header {
-    padding: 40px 20px;
+    padding: 68px 20px 36px;
   }
 
   .trip-destination {
@@ -8987,10 +8987,35 @@ html {
     gap: 10px;
   }
 
-  /* Trip header padding at tiny screens */
+  /* Trip header padding at tiny screens - top padding 68px ensures back-btn (top 14px) and trip-style-badge never overlap */
   .trip-header {
-    padding: 28px 14px !important;
+    padding: 68px 14px 28px !important;
   }
+
+  .trip-header-actions {
+    top: 14px !important;
+    left: 14px !important;
+    right: 14px !important;
+  }
+
+  .back-btn {
+    padding: 6px 14px !important;
+    font-size: 0.78rem !important;
+  }
+}
+
+/* ── PWA Install Mobile Menu Item ────────────────────────────────────────── */
+.mobile-nav-item.pwa-install-mobile {
+  background: linear-gradient(135deg, rgba(134, 59, 255, 0.25), rgba(99, 0, 255, 0.15));
+  color: #c4b5fd;
+  border: 1px solid rgba(134, 59, 255, 0.4);
+  font-weight: 600;
+}
+
+.mobile-nav-item.pwa-install-mobile:hover,
+.mobile-nav-item.pwa-install-mobile:active {
+  background: linear-gradient(135deg, rgba(134, 59, 255, 0.4), rgba(99, 0, 255, 0.3));
+  color: white;
 }
 
 /* ── General interactive element minimum touch target size ── */
