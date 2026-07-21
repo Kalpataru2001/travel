@@ -1,5 +1,5 @@
 // src/utils/sync.ts
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { serverTimestamp, doc, setDoc } from 'firebase/firestore';
 import { db } from './firebase';
 import type { FullTripItinerary } from '../types/travel';
 
@@ -23,10 +23,13 @@ export async function syncOfflineTrips(userId: string): Promise<number> {
       const cleanTrip = { ...trip };
       delete cleanTrip.unsynced;
 
-      await addDoc(collection(db, 'trips'), {
+      // Use setDoc with the trip's own ID as the document key.
+      // This prevents duplicates if the same offline trip is synced more than once.
+      await setDoc(doc(db, 'trips', cleanTrip.id), {
         userId: userId,
         tripData: cleanTrip,
         createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
       });
 
       // Update the local synced state

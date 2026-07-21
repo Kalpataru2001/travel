@@ -71,36 +71,48 @@ export default function SavedTrips({ onLoadTrip }: SavedTripsProps) {
 
   useEffect(() => {
     if (!user) { setIsLoading(false); return; }
+
+    // If offline, fall back to local cache only
     if (!navigator.onLine) {
       const c = localStorage.getItem('travel_saved_trips_cache');
       if (c) try { setSavedTrips(JSON.parse(c)); } catch {}
       setIsLoading(false);
       return;
     }
-    getDocs(query(collection(db, 'trips'), where('userId', '==', user.uid))).then(snap => {
-      const tripsMap = new Map<string, FullTripItinerary>(); // keyed by trip.id for dedup
-      const ids: Record<string, string> = {};
 
-      snap.forEach(d => {
-        const t = d.data().tripData as FullTripItinerary;
-        // Use the Firestore document ID (which is now the trip.id for new saves)
-        const tripId = t.id || d.id;
-        if (!tripsMap.has(tripId)) {
-          // First occurrence wins; skip duplicates from old addDoc approach
-          tripsMap.set(tripId, { ...t, id: tripId });
-          ids[tripId] = d.id;
-        }
-      });
+    // Always fetch fresh from Firestore when online.
+    // Never rely on localStorage cache as the primary source of truth.
+    setIsLoading(true);
+    setSavedTrips([]); // Clear stale UI immediately while Firestore loads
 
-      const trips = Array.from(tripsMap.values());
-      setSavedTrips(trips);
-      setTripDocIds(ids);
-      localStorage.setItem('travel_saved_trips_cache', JSON.stringify(trips));
-    }).catch(() => {
-      const c = localStorage.getItem('travel_saved_trips_cache');
-      if (c) try { setSavedTrips(JSON.parse(c)); } catch {}
-    }).finally(() => setIsLoading(false));
+    getDocs(query(collection(db, 'trips'), where('userId', '==', user.uid)))
+      .then(snap => {
+        const tripsMap = new Map<string, FullTripItinerary>();
+        const ids: Record<string, string> = {};
+
+        snap.forEach(d => {
+          const t = d.data().tripData as FullTripItinerary;
+          const tripId = t.id || d.id;
+          if (!tripsMap.has(tripId)) {
+            tripsMap.set(tripId, { ...t, id: tripId });
+            ids[tripId] = d.id;
+          }
+        });
+
+        const trips = Array.from(tripsMap.values());
+        setSavedTrips(trips);
+        setTripDocIds(ids);
+        // Update local cache so offline fallback is always fresh
+        localStorage.setItem('travel_saved_trips_cache', JSON.stringify(trips));
+      })
+      .catch(() => {
+        // Only fall back to cache if Firestore itself fails (not as default)
+        const c = localStorage.getItem('travel_saved_trips_cache');
+        if (c) try { setSavedTrips(JSON.parse(c)); } catch {}
+      })
+      .finally(() => setIsLoading(false));
   }, [user]);
+
 
   const handleDelete = async (tripId: string) => {
     setDeletingId(tripId);
